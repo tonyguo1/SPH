@@ -28,6 +28,7 @@ void STORAGE::check_limits()
 		{
 			zmax=zp[i];
 			i_max = i;
+			i_extendz = 1;
 		}
 		if(1)//iflag[i]==1) should be modified later a little bit more and more
 		{
@@ -62,8 +63,6 @@ void STORAGE::check_limits()
 					}
 					ncases=ncases+1;
 				}
-				if (zp[i] > zmax)
-					i_extendz = 1;
 			}
 			else
 			{

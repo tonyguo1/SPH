@@ -151,11 +151,14 @@ void AC_INTERIOR::doit()
 
 									lx2 = lx+1;
 									if(lx2<local_ncn) celij(j1,j1+local_ncn+1+(lz-1)*local_ncn*local_ncm,kind_p1,ini_kind_p2,lx2); //!N-East
-									else if (lx2 == local_ncn && store->i_periodicOBs[0])
+									else if (lx2 == local_ncn)
 									{
 										celij(j1,j1+local_ncn+1+(lz-1)*local_ncn*local_ncm,kind_p1,ini_kind_p2,lx2);
-										store->i_periodicx = 1;
-										celij(j1,ly*local_ncn+(lz-1)*local_ncn*local_ncm,kind_p1,ini_kind_p2,lx2);
+										if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,ly*local_ncn+(lz-1)*local_ncn*local_ncm,kind_p1,ini_kind_p2,lx2);
+										}
 									}
 									else if (store->i_periodicOBs[0])
 									{
@@ -278,104 +281,324 @@ void AC_INTERIOR::doit()
 
 									//- Same row -
 									celij(j1,j1+local_ncn*local_ncm,kind_p1,ini_kind_p2,ly2); //!Up
-
-									lx2=lx-1;
-									if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);   //!Up & West
-
-									lx2=lx+1;
-									if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & East
-
-									//- Next row -
-									ly2=ly+1;
-									if(ly2<=local_ncm)
-									{
-										celij(j1,j1+local_ncn*local_ncm+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
-
-										lx2=lx-1;
-										if(lx2>=1)
-											celij(j1,j1+local_ncn*local_ncm+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
-
-										lx2=lx+1;
-										if(lx2<=local_ncn)
-											celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
-									}
-
-									//- Previous row -
-									ly2=ly-1;
-									if(ly2>=1)
-									{
-										celij(j1,j1+local_ncn*local_ncm-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
-
-										lx2=lx-1;
-										if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthWest
-
-										lx2=lx+1;
-										if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthEast
-									}
-								}
-							}
-							else
-							{
-								int lx2 = lx+1;
-								if(lx2<=local_ncn)
-									celij(j1,j1+1,kind_p1,ini_kind_p2,ly2);     //!East
-
-								int ly2 = ly+1;
-								if(ly2<=local_ncm)
-								{
-									celij(j1,j1+local_ncn,kind_p1,ini_kind_p2,ly2);   //!North
 									lx2 = lx-1;
-									if(lx2>=1) celij(j1,j1+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!N-West
+									if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);
+									else if (store->i_periodicOBs[0])
+									{
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm-1+local_ncn,kind_p1,ini_kind_p2,ly2);
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm-2+local_ncn,kind_p1,ini_kind_p2,ly2);
+									}
 
 									lx2 = lx+1;
-									if(lx2<=local_ncn) celij(j1,j1+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!N-East
-								}
-
-								//-- Cells in the next XY  sheet --
-								int lz2=lz+1;
-								if(lz2<=local_ncl)
-								{
-
-									//- Same row -
-									celij(j1,j1+local_ncn*local_ncm,kind_p1,ini_kind_p2,ly2); //!Up
-
-									lx2=lx-1;
-									if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);   //!Up & West
-
-									lx2=lx+1;
-									if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & East
+									if(lx2<local_ncn) celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & East
+									else if (lx2 == local_ncn)
+									{
+										celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & East
+										if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm+2-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & East
+										}
+									}
+									else if (store->i_periodicOBs[0])
+									{
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm+1-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & East
+									}
 
 									//- Next row -
-									ly2=ly+1;
-									if(ly2<=local_ncm)
+									int ly2 = ly+1;
+									if(ly2<local_ncm || (ly2 == local_ncm && (!store->i_periodicOBs[1])))
 									{
 										celij(j1,j1+local_ncn*local_ncm+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
+										lx2 = lx-1;
+										if(lx2>=1) celij(j1,j1+local_ncn*local_ncm+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm + 2 * local_ncn - 1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm + 2 * local_ncn - 2,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+										}
 
-										lx2=lx-1;
-										if(lx2>=1)
-											celij(j1,j1+local_ncn*local_ncm+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
-
-										lx2=lx+1;
-										if(lx2<=local_ncn)
+										lx2 = lx+1;
+										if(lx2<local_ncn) celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										else if (lx2 == local_ncn)
+										{
 											celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											if (store->i_periodicOBs[0])
+											{
+												store->i_periodicx = 1;
+												celij(j1,j1+local_ncn*local_ncm+2,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											}
+										}
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										}
+									}
+									else if (ly2 == local_ncm && store->i_periodicOBs[1])
+									{
+										celij(j1,j1+local_ncn*local_ncm+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
+										store->i_periodicy = 1;
+										celij(j1,j1+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
+										lx2 = lx-1;
+										if(lx2>=1)
+										{
+											celij(j1,j1+local_ncn*local_ncm+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicy = 1;
+											celij(j1,j1+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+										}
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm+2 * local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm+2 * local_ncn-2,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+3 * local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+3 * local_ncn-2,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+										}
+
+										lx2 = lx+1;
+										if(lx2<local_ncn)
+										{
+											celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											store->i_periodicy = 1;
+											celij(j1,j1+2 * local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										}
+										else if (lx2==local_ncn)
+										{
+											celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											store->i_periodicy = 1;
+											celij(j1,j1+2 * local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											if (store->i_periodicOBs[0])
+											{
+												store->i_periodicx = 1;
+												celij(j1,j1+local_ncn*local_ncm+2,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+
+												store->i_periodicx = 1;
+												store->i_periodicy = 1;
+												celij(j1,j1+local_ncn+2,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											}
+										}
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										}
+									}
+									else if (ly2 > local_ncm && store->i_periodicOBs[1])
+									{
+										store->i_periodicy = 1;
+										celij(j1,j1+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
+										lx2 = lx-1;
+										if(lx2>=1)
+										{
+											store->i_periodicy = 1;
+											celij(j1,j1+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+										}
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+2*local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+2*local_ncn-2,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+
+										}
+
+										lx2 = lx+1;
+										if(lx2<local_ncn)
+										{
+											store->i_periodicy = 1;
+											celij(j1,j1+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										}
+										if(lx2==local_ncn)
+										{
+											store->i_periodicy = 1;
+											celij(j1,j1+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											if (store->i_periodicOBs[0])
+											{
+												store->i_periodicx = 1;
+												store->i_periodicy = 1;
+												celij(j1,j1+2,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+											}
+										}
+										else if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+										}
 									}
 
 									//- Previous row -
-									ly2=ly-1;
-									if(ly2>=1)
+									ly2=ly-1;							}
+								if (ly2 >=1)
+								{
+									celij(j1,j1+local_ncn*local_ncm-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
+									lx2 = lx-1;
+									if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+									else if (store->i_periodicOBs[0])
 									{
-										celij(j1,j1+local_ncn*local_ncm-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm-2,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+									}
 
-										lx2=lx-1;
-										if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthWest
+									lx2 = lx+1;
+									if(lx2<local_ncn) celij(j1,j1+local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
+									else if (lx2 == local_ncn)
+									{
+										celij(j1,j1+local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
+										if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											celij(j1,j1+local_ncn*local_ncm-2 * local_ncn + 2,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
+										}
+									}
+									else if (store->i_periodicOBs[0])
+									{
+										store->i_periodicx = 1;
+										celij(j1,j1+local_ncn*local_ncm-2 * local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
+									}
+								}
+								else if (store->i_periodicOBs[1])
+								{
+									store->i_periodicy = 1;
+									celij(j1,j1+2 * local_ncn*local_ncm-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
+									store->i_periodicy = 1;
+									celij(j1,j1+2 * local_ncn*local_ncm-2 * local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
+									lx2 = lx-1;
+									if(lx2>=1)
+									{
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-2 * local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+									}
+									else if (store->i_periodicOBs[0])
+									{
+										store->i_periodicx = 1;
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+										store->i_periodicx = 1;
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-2,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+										store->i_periodicx = 1;
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-1 - local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+										celij(j1,j1+2*local_ncn*local_ncm-2 - local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South-West
+									}
 
-										lx2=lx+1;
-										if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthEast
+									lx2 = lx+1;
+									if(lx2<local_ncn)
+									{
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-2 * local_ncn+1,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+									}
+									else if (lx2 == local_ncn)
+									{
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+										store->i_periodicy = 1;
+										celij(j1,j1+2*local_ncn*local_ncm-2 * local_ncn+1,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+										if (store->i_periodicOBs[0])
+										{
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+2*local_ncn*local_ncm-2 * local_ncn+2,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+											store->i_periodicx = 1;
+											store->i_periodicy = 1;
+											celij(j1,j1+2*local_ncn*local_ncm-3 * local_ncn+2,kind_p1,ini_kind_p2,ly2);    //!Up & South-East
+										}
+									}
+									else if (store->i_periodicOBs[0])
+									{
+										store->i_periodicx = 1;
+										store->i_periodicy = 1;
+										celij(j1,j1+2 * local_ncn*local_ncm - 1,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
+										store->i_periodicx = 1;
+										store->i_periodicy = 1;
+										celij(j1,j1+2 * local_ncn*local_ncm - 1-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South-East
 									}
 								}
 							}
 						}
+						else
+						{
+							int lx2 = lx+1;
+							if(lx2<=local_ncn)
+								celij(j1,j1+1,kind_p1,ini_kind_p2,ly2);     //!East
 
+							int ly2 = ly+1;
+							if(ly2<=local_ncm)
+							{
+								celij(j1,j1+local_ncn,kind_p1,ini_kind_p2,ly2);   //!North
+								lx2 = lx-1;
+								if(lx2>=1) celij(j1,j1+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!N-West
+
+								lx2 = lx+1;
+								if(lx2<=local_ncn) celij(j1,j1+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!N-East
+							}
+
+							//-- Cells in the next XY  sheet --
+							int lz2=lz+1;
+							if(lz2<=local_ncl)
+							{
+
+								//- Same row -
+								celij(j1,j1+local_ncn*local_ncm,kind_p1,ini_kind_p2,ly2); //!Up
+
+								lx2=lx-1;
+								if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-1,kind_p1,ini_kind_p2,ly2);   //!Up & West
+
+								lx2=lx+1;
+								if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm+1,kind_p1,ini_kind_p2,ly2);   //!Up & East
+
+								//- Next row -
+								ly2=ly+1;
+								if(ly2<=local_ncm)
+								{
+									celij(j1,j1+local_ncn*local_ncm+local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & North
+
+									lx2=lx-1;
+									if(lx2>=1)
+										celij(j1,j1+local_ncn*local_ncm+local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & North-West
+
+									lx2=lx+1;
+									if(lx2<=local_ncn)
+										celij(j1,j1+local_ncn*local_ncm+local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & North-East
+								}
+
+								//- Previous row -
+								ly2=ly-1;
+								if(ly2>=1)
+								{
+									celij(j1,j1+local_ncn*local_ncm-local_ncn,kind_p1,ini_kind_p2,ly2);   //!Up & South
+
+									lx2=lx-1;
+									if(lx2>=1) celij(j1,j1+local_ncn*local_ncm-local_ncn-1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthWest
+
+									lx2=lx+1;
+									if(lx2<=local_ncn) celij(j1,j1+local_ncn*local_ncm-local_ncn+1,kind_p1,ini_kind_p2,ly2);   //!Up & SouthEast
+								}
+							}
+						}
 					}
 		}
 		else
