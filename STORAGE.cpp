@@ -21,7 +21,7 @@ STORAGE::~STORAGE() {
 void STORAGE::check_limits()
 {
 	int ncases=0;
-	vector<double>::size_type i;
+	size_t i;
 	for (i = nb;i<np;i++)
 	{
 		if(zp[i] > zmax && iflag[i]==1)
@@ -34,54 +34,85 @@ void STORAGE::check_limits()
 		{
 			if (dim == 3)
 			{
-				if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
+				if (i_periodicOBs[0] * i_periodicOBs[1] * i_periodicOBs[2] == 0)
 				{
-					if (xp[i] > vlx[1])
+					if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
 					{
-						xp[i] = vlx[1]-(xp[i]-vlx[1]);
-						up[i] = -up[i];
-					}
-					else if (xp[i] < vlx[0])
-					{
-						xp[i] = vlx[0] + (vlx[0]- xp[i]);
-						up[i] = - up[i];
-					}
-					else if (yp[i] > vly[1])
-					{
-						yp[i] = vly[1]-(yp[i]-vly[1]);
-						up[i] = -vp[i];
-					}
-					else if (yp[i]<vly[0])
-					{
-						yp[i] = vly[0] + (vly[0]- yp[i]);
-						up[i] = -vp[i];
+						if (xp[i] > vlx[1])
+						{
+							xp[i] = vlx[1]-(xp[i]-vlx[1]);
+							up[i] = -up[i];
+						}
+						else if (xp[i] < vlx[0])
+						{
+							xp[i] = vlx[0] + (vlx[0]- xp[i]);
+							up[i] = - up[i];
+						}
+						else if (yp[i] > vly[1])
+						{
+							yp[i] = vly[1]-(yp[i]-vly[1]);
+							vp[i] = -vp[i];
+						}
+						else if (yp[i]<vly[0])
+						{
+							yp[i] = vly[0] + (vly[0]- yp[i]);
+							vp[i] = -vp[i];
+						}
+						else
+						{
+							zp[i] = vlz[0] + (vlz[0]- zp[i]);
+							wp[i] = -wp[i];
+						}
+						ncases=ncases+1;
 					}
 					else
 					{
-						zp[i] = vlz[0] + (vlz[0]- zp[i]);
-						up[i] = -wp[i];
+						if(xp[i] > N*dx || xp[i] < 0 || zp[i]<0)
+						{
+							if (xp[i] > N*dx)
+							{
+								xp[i] = N*dx-(xp[i]-N*dx);
+								up[i] = -up[i];
+							}
+							else if (xp[i] < 0)
+							{
+								xp[i] = - xp[i];
+								up[i] = -up[i];
+							}
+							else
+							{
+								zp[i] = -zp[i];
+								up[i] = -wp[i];
+							}
+							ncases=ncases+1;
+						}
 					}
-					ncases=ncases+1;
 				}
 			}
 			else
 			{
-				if(xp[i] > N*dx || xp[i] < 0 || zp[i]<0)
+				if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
 				{
-					if (xp[i] > N*dx)
+					if (xp[i] > vlx[1])
 					{
-						xp[i] = N*dx-(xp[i]-N*dx);
-						up[i] = -up[i];
+						xp[i] = vlx[0] + (xp[i]-vlx[1]);
 					}
-					else if (xp[i] < 0)
+					else if (xp[i] < vlx[0])
 					{
-						xp[i] = - xp[i];
-						up[i] = -up[i];
+						xp[i] = vlx[1] - (vlx[0]- xp[i]);
+					}
+					else if (yp[i] > vly[1])
+					{
+						yp[i] = vly[0] + (yp[i] - vly[1]);
+					}
+					else if (yp[i]<vly[0])
+					{
+						yp[i] = vly[1] - (vly[0]- yp[i]);
 					}
 					else
 					{
-						zp[i] = -zp[i];
-						up[i] = -wp[i];
+						zp[i] = vlz[0] + (vlz[0]- zp[i]);
+						wp[i] = -wp[i];
 					}
 					ncases=ncases+1;
 				}
@@ -446,6 +477,30 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 
 						if (lattice == 2)
 						{
+							if (i_Mountain == 1)
+							{
+								double x,y,z,r,h;
+								x = vlx[0]+(i+0.25)*dx;
+								y = vly[0]+(j+0.25)*dx;
+								r = sqrt((x - Mountain_Center[0])*(x - Mountain_Center[0]) + (y - Mountain_Center[1])*(y - Mountain_Center[1]));
+								if (r < Mountain_Radius)
+								{
+									h = Mountain_Height * pow((1 - r/Mountain_Radius),4) * (4 * r / Mountain_Radius + 1);
+									z = vlz[0]+(k+0.25)*dx;
+									if (z < h)
+										continue;
+								}
+								x = vlx[0]+(i+0.75)*dx;
+								y = vly[0]+(j+0.75)*dx;
+								r = sqrt((x - Mountain_Center[0])*(x - Mountain_Center[0]) + (y - Mountain_Center[1])*(y - Mountain_Center[1]));
+								if (r < Mountain_Radius)
+								{
+									h = Mountain_Height * pow((1 - r/Mountain_Radius),4) * (4 * r / Mountain_Radius + 1);
+									z = vlz[0]+(k+0.75)*dx;
+									if (z < h)
+										continue;
+								}
+							}
 							nn++;
 							pos_veloc(vlx[0]+(i+0.25)*dx,vly[0]+(j+0.25)*dx,vlz[0]+(k+0.25)*dx,0,0,0);
 							pressure(dx,dy,dz);
@@ -1570,7 +1625,7 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"ASCII\n");
 	fprintf(outfile,"DATASET POLYDATA\n");
 	fprintf(outfile,"POINTS %lu double\n",nb);
-//	for (i =nb;i<np;i++)
+	//	for (i =nb;i<np;i++)
 	for (i =0;i<nb;i++)
 	{
 		if (dim == 3)
@@ -1581,25 +1636,25 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"POINT_DATA %lu\n",nb);
 	fprintf(outfile,"SCALARS pressure double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
-//	for (i = nb;i<np;i++)
+	//	for (i = nb;i<np;i++)
 	for (i =0;i<nb;i++)
 	{
 		fprintf(outfile,"%.16g\n",p[i]);
 	}
-//	fprintf(outfile,"SCALARS density double\n");
-//	fprintf(outfile,"LOOKUP_TABLE default\n");
-//	for (i =nb;i<np;i++)
-//	{
-//		fprintf(outfile,"%.16g\n",rho[i]);
-//	}
-//	fprintf(outfile,"VECTORS velocity double\n");
-//	for (i =nb;i<np;i++)
-//	{
-//		if (dim == 3)
-//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
-//		else
-//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
-//	}
+	//	fprintf(outfile,"SCALARS density double\n");
+	//	fprintf(outfile,"LOOKUP_TABLE default\n");
+	//	for (i =nb;i<np;i++)
+	//	{
+	//		fprintf(outfile,"%.16g\n",rho[i]);
+	//	}
+	//	fprintf(outfile,"VECTORS velocity double\n");
+	//	for (i =nb;i<np;i++)
+	//	{
+	//		if (dim == 3)
+	//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
+	//		else
+	//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
+	//	}
 	if (detail)
 	{
 		fprintf(outfile,"SCALARS PM double\n");
