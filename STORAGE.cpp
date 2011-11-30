@@ -249,10 +249,15 @@ void STORAGE::Boundaries_LeftRight(int N, int M, int L, double dx, double dy, do
 
 void STORAGE::Boundaries_Bottom(int N, int M, int L, double dx, double dy, double dz)
 {
+	Mountain_Center[0] = 1;
+	Mountain_Center[1] = 1;
+	Mountain_Height = 1;
+	Mountain_Radius = 0.5;
+	i_Mountain = 1;
 	if (PartitionIndex[2] != 0)
 		return;
 	//	- Inner Layer -
-	int n0,n1,m0,m1;
+	int n0,n1,m0,m1,l0,l1;
 	if (localvlx[0] - vlx[0]< 0.5*dx)
 		n0 = 0;
 	else
@@ -268,12 +273,37 @@ void STORAGE::Boundaries_Bottom(int N, int M, int L, double dx, double dy, doubl
 		for (int i = n0;i<n1;i++)
 			for (int j = m0;j<m1;j++)
 			{
-				if (PartitionIndex[2] == 0)
+				if (i_Mountain == 1)
 				{
-					nn++;
-					pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dy,vlz[0],0,0,0);
-					pressure_b(dx,dy,dz);
+					if (localvlz[0] - vlz[0]< 0.5*dz)
+						l0 = 0;
+					else
+						l0 = (int)((localvlz[0]-vlz[0]+ 0.00000001*dz)/dz)+1;
+					l1 = (int)((Mountain_Height + 0.00000001 * dz)/dz) + 1;
+					double x,y,z,r,h;
+					x = vlx[0] + (i+0.5) * dx;
+					y = vly[0] + (j+0.5) * dy;
+					r = sqrt((x - Mountain_Center[0])*(x - Mountain_Center[0]) + (y - Mountain_Center[1])*(y - Mountain_Center[1]));
+					if (r < Mountain_Radius)
+					{
+						h = Mountain_Height * pow((1 - r/Mountain_Radius),4) * (4 * r / Mountain_Radius + 1);
+						for (int k = l1, flag = 1; (k >= l0) && flag; k--)
+						{
+							z = vlz[0] + k * dz;
+							if (z < h)
+							{
+								nn++;
+								pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dy,z,0,0,0);
+								pressure_b(dx,dy,dz);
+								flag = 0;
+							}
+						}
+						continue;
+					}
 				}
+				nn++;
+				pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dy,vlz[0],0,0,0);
+				pressure_b(dx,dy,dz);
 			}
 	}
 	else
@@ -302,7 +332,34 @@ void STORAGE::Boundaries_Bottom(int N, int M, int L, double dx, double dy, doubl
 		for (int i = n0;i<=n1;i++)
 			for (int j = m0;j<=m1;j++)
 			{
-				if (PartitionIndex[2] == 0)
+				if (i_Mountain == 1)
+				{
+					if (localvlz[0] - vlz[0]< 0.5*dz)
+						l0 = 0;
+					else
+						l0 = (int)((localvlz[0]-vlz[0]*dz)/dz - 0.4999999*dz)+1;
+					l1 = (int)((Mountain_Height - 0.4999999 * dz)/dz) + 1;
+					double x,y,z,r,h;
+					x = vlx[0] + i * dx;
+					y = vly[0] + j * dy;
+					r = sqrt((x - Mountain_Center[0])*(x - Mountain_Center[0]) + (y - Mountain_Center[1])*(y - Mountain_Center[1]));
+					if (r < Mountain_Radius)
+					{
+						h = Mountain_Height * pow((1 - r/Mountain_Radius),4) * (4 * r / Mountain_Radius + 1);
+						for (int k = l1, flag = 1; (k >= l0) && flag; k--)
+						{
+							z = vlz[0] + k * dz - 0.5  * dz;
+							if (z < h)
+							{
+								nn++;
+								pos_veloc(x,y,z,0,0,0);
+								pressure_b(dx,dy,dz);
+								flag = 0;
+							}
+						}
+					}
+				}
+				else
 				{
 					nn++;
 					pos_veloc(vlx[0]+i*dx,vly[0]+j*dy,vlz[0]-0.5*dz,0,0,0);
@@ -1512,35 +1569,37 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"The actual time is %.8f\n",time);
 	fprintf(outfile,"ASCII\n");
 	fprintf(outfile,"DATASET POLYDATA\n");
-	fprintf(outfile,"POINTS %lu double\n",np-nb);
-	for (i =nb;i<np;i++)
+	fprintf(outfile,"POINTS %lu double\n",nb);
+//	for (i =nb;i<np;i++)
+	for (i =0;i<nb;i++)
 	{
 		if (dim == 3)
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],yp[i],zp[i]);
 		else
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],d,zp[i]);
 	}
-	fprintf(outfile,"POINT_DATA %lu\n",np-nb);
+	fprintf(outfile,"POINT_DATA %lu\n",nb);
 	fprintf(outfile,"SCALARS pressure double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i = nb;i<np;i++)
+//	for (i = nb;i<np;i++)
+	for (i =0;i<nb;i++)
 	{
 		fprintf(outfile,"%.16g\n",p[i]);
 	}
-	fprintf(outfile,"SCALARS density double\n");
-	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i =nb;i<np;i++)
-	{
-		fprintf(outfile,"%.16g\n",rho[i]);
-	}
-	fprintf(outfile,"VECTORS velocity double\n");
-	for (i =nb;i<np;i++)
-	{
-		if (dim == 3)
-			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
-		else
-			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],d,zp[i]);
-	}
+//	fprintf(outfile,"SCALARS density double\n");
+//	fprintf(outfile,"LOOKUP_TABLE default\n");
+//	for (i =nb;i<np;i++)
+//	{
+//		fprintf(outfile,"%.16g\n",rho[i]);
+//	}
+//	fprintf(outfile,"VECTORS velocity double\n");
+//	for (i =nb;i<np;i++)
+//	{
+//		if (dim == 3)
+//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
+//		else
+//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
+//	}
 	if (detail)
 	{
 		fprintf(outfile,"SCALARS PM double\n");
