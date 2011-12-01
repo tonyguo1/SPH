@@ -34,7 +34,7 @@ void STORAGE::check_limits()
 		{
 			if (dim == 3)
 			{
-				if (i_periodicOBs[0] * i_periodicOBs[1] * i_periodicOBs[2] == 0)
+				if ((i_periodicOBs[0] + i_periodicOBs[1] + i_periodicOBs[2]) == 0)
 				{
 					if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
 					{
@@ -72,11 +72,11 @@ void STORAGE::check_limits()
 					{
 						if (xp[i] > vlx[1])
 						{
-							xp[i] = vlx[0] + (xp[i]-vlx[1]);
+							xp[i] = vlx[0] + (xp[i] - vlx[1]);
 						}
 						else if (xp[i] < vlx[0])
 						{
-							xp[i] = vlx[1] - (vlx[0]- xp[i]);
+							xp[i] = vlx[1] - (vlx[0] - xp[i]);
 						}
 						else if (yp[i] > vly[1])
 						{
@@ -84,7 +84,7 @@ void STORAGE::check_limits()
 						}
 						else if (yp[i]<vly[0])
 						{
-							yp[i] = vly[1] - (vly[0]- yp[i]);
+							yp[i] = vly[1] - (vly[0] - yp[i]);
 						}
 						else
 						{
