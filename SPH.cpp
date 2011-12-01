@@ -134,7 +134,6 @@ int main(int argc, char **argv) {
 		store.StatesPrint(0,0,"Interface",output.c_str());
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-	assert(0);
 	while (solve->time < store.tmax && solve->itime < 40000)
 	{
 		solve->ModifyDtForPrint();

@@ -65,54 +65,53 @@ void STORAGE::check_limits()
 						}
 						ncases=ncases+1;
 					}
-					else
+				}
+				else
+				{
+					if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
 					{
-						if(xp[i] > N*dx || xp[i] < 0 || zp[i]<0)
+						if (xp[i] > vlx[1])
 						{
-							if (xp[i] > N*dx)
-							{
-								xp[i] = N*dx-(xp[i]-N*dx);
-								up[i] = -up[i];
-							}
-							else if (xp[i] < 0)
-							{
-								xp[i] = - xp[i];
-								up[i] = -up[i];
-							}
-							else
-							{
-								zp[i] = -zp[i];
-								up[i] = -wp[i];
-							}
-							ncases=ncases+1;
+							xp[i] = vlx[0] + (xp[i]-vlx[1]);
+						}
+						else if (xp[i] < vlx[0])
+						{
+							xp[i] = vlx[1] - (vlx[0]- xp[i]);
+						}
+						else if (yp[i] > vly[1])
+						{
+							yp[i] = vly[0] + (yp[i] - vly[1]);
+						}
+						else if (yp[i]<vly[0])
+						{
+							yp[i] = vly[1] - (vly[0]- yp[i]);
+						}
+						else
+						{
+							zp[i] = vlz[0] + (vlz[0]- zp[i]);
+							wp[i] = -wp[i];
 						}
 					}
 				}
 			}
 			else
 			{
-				if(xp[i] > vlx[1] || xp[i] < vlx[0] || yp[i] > vly[1] || yp[i]<vly[0] || zp[i]<vlz[0])
+				if(xp[i] > N*dx || xp[i] < 0 || zp[i]<0)
 				{
-					if (xp[i] > vlx[1])
+					if (xp[i] > N*dx)
 					{
-						xp[i] = vlx[0] + (xp[i]-vlx[1]);
+						xp[i] = N*dx-(xp[i]-N*dx);
+						up[i] = -up[i];
 					}
-					else if (xp[i] < vlx[0])
+					else if (xp[i] < 0)
 					{
-						xp[i] = vlx[1] - (vlx[0]- xp[i]);
-					}
-					else if (yp[i] > vly[1])
-					{
-						yp[i] = vly[0] + (yp[i] - vly[1]);
-					}
-					else if (yp[i]<vly[0])
-					{
-						yp[i] = vly[1] - (vly[0]- yp[i]);
+						xp[i] = - xp[i];
+						up[i] = -up[i];
 					}
 					else
 					{
-						zp[i] = vlz[0] + (vlz[0]- zp[i]);
-						wp[i] = -wp[i];
+						zp[i] = -zp[i];
+						up[i] = -wp[i];
 					}
 					ncases=ncases+1;
 				}
@@ -502,10 +501,10 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 								}
 							}
 							nn++;
-							pos_veloc(vlx[0]+(i+0.25)*dx,vly[0]+(j+0.25)*dx,vlz[0]+(k+0.25)*dx,0,0,0);
+							pos_veloc(vlx[0]+(i+0.25)*dx,vly[0]+(j+0.25)*dx,vlz[0]+(k+0.25)*dx,u,v,w);
 							pressure(dx,dy,dz);
 							nn++;
-							pos_veloc(vlx[0]+(i+0.75)*dx,vly[0]+(j+0.75)*dx,vlz[0]+(k+0.75)*dx,0,0,0);
+							pos_veloc(vlx[0]+(i+0.75)*dx,vly[0]+(j+0.75)*dx,vlz[0]+(k+0.75)*dx,u,v,w);
 							pressure(dx,dy,dz);
 						}
 						else
@@ -1624,37 +1623,37 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"The actual time is %.8f\n",time);
 	fprintf(outfile,"ASCII\n");
 	fprintf(outfile,"DATASET POLYDATA\n");
-	fprintf(outfile,"POINTS %lu double\n",nb);
-	//	for (i =nb;i<np;i++)
-	for (i =0;i<nb;i++)
+	fprintf(outfile,"POINTS %lu double\n",np-nb);
+	for (i =nb;i<np;i++)
+//	for (i =0;i<nb;i++)
 	{
 		if (dim == 3)
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],yp[i],zp[i]);
 		else
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],d,zp[i]);
 	}
-	fprintf(outfile,"POINT_DATA %lu\n",nb);
+	fprintf(outfile,"POINT_DATA %lu\n",np-nb);
 	fprintf(outfile,"SCALARS pressure double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
-	//	for (i = nb;i<np;i++)
-	for (i =0;i<nb;i++)
+	for (i = nb;i<np;i++)
+	//for (i =0;i<nb;i++)
 	{
 		fprintf(outfile,"%.16g\n",p[i]);
 	}
-	//	fprintf(outfile,"SCALARS density double\n");
-	//	fprintf(outfile,"LOOKUP_TABLE default\n");
-	//	for (i =nb;i<np;i++)
-	//	{
-	//		fprintf(outfile,"%.16g\n",rho[i]);
-	//	}
-	//	fprintf(outfile,"VECTORS velocity double\n");
-	//	for (i =nb;i<np;i++)
-	//	{
-	//		if (dim == 3)
-	//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
-	//		else
-	//			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
-	//	}
+	fprintf(outfile,"SCALARS density double\n");
+	fprintf(outfile,"LOOKUP_TABLE default\n");
+	for (i =nb;i<np;i++)
+	{
+		fprintf(outfile,"%.16g\n",rho[i]);
+	}
+	fprintf(outfile,"VECTORS velocity double\n");
+	for (i =nb;i<np;i++)
+	{
+		if (dim == 3)
+			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
+		else
+			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
+	}
 	if (detail)
 	{
 		fprintf(outfile,"SCALARS PM double\n");
