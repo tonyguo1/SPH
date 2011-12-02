@@ -24,7 +24,7 @@ void STORAGE::check_limits()
 	size_t i;
 	for (i = nb;i<np;i++)
 	{
-		if(zp[i] > zmax && iflag[i]==1)
+		if(zp[i] > zmax)
 		{
 			zmax=zp[i];
 			i_max = i;
@@ -117,6 +117,11 @@ void STORAGE::check_limits()
 				}
 			}
 		}
+	}
+	if (i_extendz == 1)
+	{
+		divide(0,nbb1,1);
+		i_extendz = 0;
 	}
 	return;
 }
@@ -282,8 +287,8 @@ void STORAGE::Boundaries_Bottom(int N, int M, int L, double dx, double dy, doubl
 	Mountain_Center[0] = 1;
 	Mountain_Center[1] = 1;
 	Mountain_Height = 1;
-	Mountain_Radius = 0.5;
-	i_Mountain = 1;
+	Mountain_Radius = 0.75;
+	i_Mountain = 0;
 	if (PartitionIndex[2] != 0)
 		return;
 	//	- Inner Layer -
@@ -509,13 +514,27 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 						}
 						else
 						{
+							if (i_Mountain == 1)
+							{
+								double x,y,z,r,h;
+								x = vlx[0]+(i+0.5)*dx;
+								y = vly[0]+(j+0.5)*dx;
+								r = sqrt((x - Mountain_Center[0])*(x - Mountain_Center[0]) + (y - Mountain_Center[1])*(y - Mountain_Center[1]));
+								if (r < Mountain_Radius)
+								{
+									h = Mountain_Height * pow((1 - r/Mountain_Radius),4) * (4 * r / Mountain_Radius + 1);
+									z = vlz[0]+(k+0.5)*dx;
+									if (z < h)
+										continue;
+								}
+							}
 							//for debugging
-							double value;
-							value = p0 * (vlx[0]+(i+0.5));
+//							double value;
+//							value = p0 * (vlx[0]+(i+0.5));
 							//end for debugging
 							nn++;
-							pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dx,vlz[0]+(k+0.5)*dx,0,0,0);
-							pressure(dx,dy,dz,value);
+							pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dx,vlz[0]+(k+0.5)*dx,u,v,w);
+							pressure(dx,dy,dz);
 						}
 					}
 		}
@@ -1284,6 +1303,7 @@ void STORAGE::Initialization(string input)
 		vlz[1] = vly[1] = 0;
 
 	}
+	zmax = vlz[1];
 	line_num++;
 	line.str(lines_of_text[line_num]);
 	if (dim == 3)
@@ -1478,11 +1498,11 @@ void STORAGE::divide(int start, int end, int kind)
 	//	nx = ncn*ncm*ncl;
 	if (i_extendz == 1 && (PartitionIndex[2] + 1) == PL)
 	{
-		ncl++;
+	    ncl++;
 		local_ncl++;
 		local_ncl_interior[1]++;
 		nx = local_ncn * local_ncm * local_ncl;
-		zmax = ncl * 2 * h + vlz[0] - 1.5*dz;
+		zmax = ncl * 2 * h + vlz[0];
 		i_extendz = 0;
 	}
 	if (kind == 1)
@@ -1538,6 +1558,8 @@ void STORAGE::divide(int start, int end, int kind)
 			kcell = (int)( distz / (2*h) ) + 1;
 			int ii;
 			ii    = icell - 1 + (kcell - 1)*local_ncn;
+			if (ii >= nx)
+				assert(0);
 			(kind == 1)?((nc_k1[ii])++):((nc_k2[ii])++);
 			(kind == 1)?(ibox_k1[ii].push_back(i)):(ibox_k2[ii].push_back(i));
 		}
@@ -1623,31 +1645,31 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"The actual time is %.8f\n",time);
 	fprintf(outfile,"ASCII\n");
 	fprintf(outfile,"DATASET POLYDATA\n");
-	fprintf(outfile,"POINTS %lu double\n",np-nb);
-	for (i =nb;i<np;i++)
-//	for (i =0;i<nb;i++)
+	fprintf(outfile,"POINTS %lu double\n",np-0);
+	for (i =0;i<np;i++)
+//	for (i =0;i<0;i++)
 	{
 		if (dim == 3)
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],yp[i],zp[i]);
 		else
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],d,zp[i]);
 	}
-	fprintf(outfile,"POINT_DATA %lu\n",np-nb);
+	fprintf(outfile,"POINT_DATA %lu\n",np-0);
 	fprintf(outfile,"SCALARS pressure double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i = nb;i<np;i++)
-	//for (i =0;i<nb;i++)
+	for (i = 0;i<np;i++)
+	//for (i =0;i<0;i++)
 	{
 		fprintf(outfile,"%.16g\n",p[i]);
 	}
 	fprintf(outfile,"SCALARS density double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i =nb;i<np;i++)
+	for (i =0;i<np;i++)
 	{
 		fprintf(outfile,"%.16g\n",rho[i]);
 	}
 	fprintf(outfile,"VECTORS velocity double\n");
-	for (i =nb;i<np;i++)
+	for (i =0;i<np;i++)
 	{
 		if (dim == 3)
 			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
@@ -2110,7 +2132,7 @@ void STORAGE::ParallelInitialization()
 		ncl = int((L*dx)/(2*h))+1;
 	if (IBC !=3)
 	{
-		zmax = ncl*2*h + vlz[0] - 1.5*dz;
+		zmax = ncl*2*h + vlz[0];
 	}
 	if (PartitionIndex[0] + 1 != PN)
 	{
@@ -2221,8 +2243,8 @@ void STORAGE::ParallelInitialization()
 		}
 		else
 		{
-			localvlz[0] = vlz[0] - 1.5 * dz +  PartitionIndex[2] * local_ncl * 2 * h;
-			localvlz[1] = vlz[0] - 1.5 * dz +  (PartitionIndex[2] + 1) * local_ncl * 2 * h;
+			localvlz[0] = vlz[0] - dz +  PartitionIndex[2] * local_ncl * 2 * h;
+			localvlz[1] = vlz[0] - dz +  (PartitionIndex[2] + 1) * local_ncl * 2 * h;
 		}
 	}
 	else
@@ -2237,8 +2259,8 @@ void STORAGE::ParallelInitialization()
 			}
 			else
 			{
-				localvlz[0] = vlz[0] - 1.5 * dz +  PartitionIndex[2] * local_ncl * 2 * h;
-				localvlz[1] = vlz[1] + 1.5 * dz;
+				localvlz[0] = vlz[0] - dz +  PartitionIndex[2] * local_ncl * 2 * h;
+				localvlz[1] = vlz[1] + dz;
 			}
 		}
 		else
@@ -2251,8 +2273,8 @@ void STORAGE::ParallelInitialization()
 			}
 			else
 			{
-				localvlz[0] = vlz[0] - 1.5 * dz +  PartitionIndex[2] * (ncl / PL + 1) * 2 * h;
-				localvlz[1] = vlz[1] + 1.5 * dz;
+				localvlz[0] = vlz[0] - dz +  PartitionIndex[2] * (ncl / PL + 1) * 2 * h;
+				localvlz[1] = vlz[1] + dz;
 			}
 		}
 	}
