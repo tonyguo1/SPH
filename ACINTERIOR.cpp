@@ -277,8 +277,6 @@ void AC_INTERIOR::doit()
 								int lz2=lz+1;
 								if(lz2<=local_ncl)
 								{
-									if (j1 >= store->nx - local_ncn*local_ncm)
-										assert(0);
 									//- Same row -
 									celij(j1,j1+local_ncn*local_ncm,kind_p1,ini_kind_p2,ly2); //!Up
 									lx2 = lx-1;

@@ -558,174 +558,152 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 	}
 	else
 	{
-		double h_r = dx;
+		double h_r = 0.5*dx;
 		if (dim == 2)
 		{
-			assert(0);
-			//			int h_m, h_n_odd, h_n_even;
-			//			double h_l, h_w;
-			//			h_l = localXXmax - localXXmin; //length of domain on x-axis
-			//			h_w = localZZmax - localZZmin; //width of domain on z-axis
-			//
-			//			// compute # of rows (h_m)
-			//			int h_g = (int)((h_w-h_r)/(sqrt(3)*h_r));
-			//			if (h_r+(h_g+1)*sqrt(3)*h_r<=h_w)
-			//				h_m = h_g+2;
-			//			else
-			//				h_m = h_g+1;
-			//
-			//			//compute # of columns (h_n_odd) for odd-numbered rows
-			//			int h_f1 = (int) ((h_l-h_r)/h_r);
-			//			if (h_f1%2 != 0)
-			//				h_n_odd = (h_f1+1)/2;
-			//			else
-			//				h_n_odd = h_f1/2;
-			//
-			//			//compute # of columns (h_n_even) for even-numbered rows
-			//			int h_f2 = (int) (h_l/h_r);
-			//			if (h_f2%2 != 0)
-			//				h_n_even = (h_f2+1)/2;
-			//			else
-			//				h_n_even = h_f2/2;
-			//
-			//			//compute total number of particles inside the cube
-			//			if (h_m%2 != 0)
-			//				nn = (h_m+1)/2*h_n_odd+(h_m-1)/2*h_n_even;
-			//			else
-			//				nn = h_m/2*(h_n_odd+h_n_even);
-			//			cout<<"# of particles inside whole 2D domain is\t"<<nn<<endl;
-			//
-			//			//compute the location of particles inside the cube
-			//			for (int i=1; i<=h_m; i++){ //rows
-			//				if (i%2 != 0){ //odd-numbered rows
-			//					for (int j=1; j<=h_n_odd; j++){ //columns
-			//						pos_veloc(localXXmin+2*h_r+(j-1)*2*h_r,0,localZZmin+h_r+(i-1)*sqrt(3)*h_r,0,0,0);
-			//						pressure(h_r,h_r,h_r);
-			//					}
-			//				}
-			//				else{ //even-numbered rows
-			//					for (int j=1; j<=h_n_even; j++){ //columns
-			//						pos_veloc(localXXmin+h_r+(j-1)*2*h_r,0,localZZmin+h_r+(i-1)*sqrt(3)*h_r,0,0,0);
-			//						pressure(h_r,h_r,h_r);
-			//					}
-			//				}
-			//			}
+			int n0_odd, n1_odd, n0_even, n1_even;
+
+			if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
+				l0 = 0;
+			else
+				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				n0_odd = 0;
+			else
+				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				n0_even = 0;
+			else
+				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+
+
+			//compute the location of particles
+			for (int i=l0; i<l1; i++)
+			{
+				if ((i+1)%2 != 0) //odd-numbered rows
+						{
+					for (int j=n0_odd; j<n1_odd; j++)
+					{
+						pos_veloc(vlx[0]+2.0*h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+					}
+						}
+				else //even-numbered rows
+				{
+					for (int j=n0_even; j<n1_even; j++)
+					{
+						pos_veloc(vlx[0]+h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+					}
+				}
+			}
 		}
-		if(dim == 3){
-			int hh_m, hh_n_odd, hh_n_even, hh_u, hh_v_odd, hh_v_even, hh_d;
-			double hh_l, hh_w, hh_h;
-			hh_l = localXXmax-localXXmin; //length of domain on x-axis
-			hh_w = localYYmax-localYYmin; //width of domain on y-axis
-			hh_h = localZZmax-localZZmin; //height of domain on z-axis
+		if(dim == 3)
+		{
+			int m0_odd, m1_odd, m0_even, m1_even, n0_odd, n1_odd, n0_even, n1_even;
+			int nn0_odd, nn1_odd, nn0_even, nn1_even;
 
-			//compute # of layers (hh_d)
-			int hh_e = (int)( (hh_h-h_r)/2/sqrt(6)/h_r*3 );
-			if (h_r+(hh_e+1)*2*sqrt(6)*h_r/3 <= hh_h)
-				hh_d = hh_e+2;
+			//layers
+			if (localZZmin-vlz[0]-h_r < 0.5*(2.0*sqrt(6)/3.0*h_r))
+				l0 = 0;
 			else
-				hh_d = hh_e+1;
+				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(2.0*sqrt(6)/3.0*h_r))/(2.0*sqrt(6)/3.0*h_r))+1;
+			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(2.0*sqrt(6)/3.0*h_r))/(2.0*sqrt(6)/3.0*h_r))+1;
 
-			//compute # of rows (hh_m) for odd-numbered layers
-			int hh_g = (int)((hh_w-h_r)/(sqrt(3)*h_r));
-			if (h_r+(hh_g+1)*sqrt(3)*h_r<=hh_w)
-				hh_m = hh_g+2;
+			//rows (for odd-numbered layers)
+			if (localYYmin-vly[0]-h_r < 0.5*(sqrt(3)*h_r))
+				m0_odd = 0;
 			else
-				hh_m = hh_g+1;
+				m0_odd = (int) ((localYYmin-vly[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			m1_odd = (int) ((localYYmax-vly[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-			//compute # of columns (hh_n_odd) for odd-numbered rows & odd-numbered layers
-			int hh_f1 = (int) ((hh_l-h_r)/h_r);
-			if (hh_f1%2 != 0)
-				hh_n_odd = (hh_f1+1)/2;
+			//columns (for odd-numbered layers & odd-numbered rows)
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				n0_odd = 0;
 			else
-				hh_n_odd = hh_f1/2;
+				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of columns (hh_n_even) for even-numbered rows & odd-numbered layers
-			int hh_f2 = (int) (hh_l/h_r);
-			if (hh_f2%2 != 0)
-				hh_n_even = (hh_f2+1)/2;
+			//columns (for odd-numbered layers & even-numbered rows)
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				n0_even = 0;
 			else
-				hh_n_even = hh_f2/2;
+				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of rows (hh_u) for even-numbered layers
-			int hh_a = (int)( (hh_w+(1-sqrt(3)/3)*h_r)/sqrt(3)/h_r );
-			if (sqrt(3)/3*h_r+(hh_a+1)*sqrt(3)*h_r<=hh_w)
-				hh_u = hh_a+2;
+			//rows (for even-numbered layers)
+			if (localYYmin-vly[0]-sqrt(3)/3.0*h_r < 0.5*(sqrt(3)*h_r))
+				m0_even = 0;
 			else
-				hh_u = hh_a+1;
+				m0_even = (int) ((localYYmin-vly[0]-sqrt(3)/3.0*h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			m1_even = (int) ((localYYmax-vly[0]-sqrt(3)/3.0*h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-			//compute # of columns (hh_v_odd) for odd-numbered rows & even-numbered layers
-			if (hh_f2%2 != 0)
-				hh_v_odd = (hh_f2+1)/2;
+			//columns (for even-numbered layers & odd-numbered rows)
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				nn0_odd = 0;
 			else
-				hh_v_odd = hh_f2/2;
+				nn0_odd = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			nn1_odd = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of columns (hh_v_even) for even-numbered rows & even-numbered layers
-			if (hh_f1%2 != 0)
-				hh_v_even = (hh_f1+1)/2;
+			//columns (for even-numbered layers & even-numbered rows)
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				nn0_even = 0;
 			else
-				hh_v_even = hh_f1/2;
+				nn0_even = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			nn1_even = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute the total number of particles inside the cube
-			int tempA, tempB;
-			if (hh_d%2 != 0){ //there is an odd number of layers
-				if (hh_m%2 != 0) //there is an odd number of rows
-					tempA = ( (hh_m+1)/2*hh_n_odd+(hh_m-1)/2*hh_n_even ) * (hh_d+1)/2;
-				else
-					tempA = hh_m/2*(hh_n_odd+hh_n_even) * (hh_d+1)/2;
-
-				if (hh_u%2 != 0) //there is an odd number of rows
-					tempB = ( (hh_u+1)/2*hh_v_odd+(hh_u-1)/2*hh_v_even ) * (hh_d-1)/2;
-				else
-					tempB = hh_u/2*(hh_v_odd+hh_v_even) * (hh_d-1)/2;
-			}
-			else{ //there is an even number of layers
-				if (hh_m%2 != 0) //there is an odd number of rows
-					tempA = ( (hh_m+1)/2*hh_n_odd+(hh_m-1)/2*hh_n_even ) * hh_d/2;
-				else
-					tempA = hh_m/2*(hh_n_odd+hh_n_even) * hh_d/2;
-
-				if (hh_u%2 != 0) //there is an odd number of rows
-					tempB = ( (hh_u+1)/2*hh_v_odd+(hh_u-1)/2*hh_v_even ) * hh_d/2;
-				else
-					tempB = hh_u/2*(hh_v_odd+hh_v_even) * hh_d/2;
-			}
-			size_t nn_increase = tempA + tempB;
-			//			cout<<"# of particles inside whole 3D domain is\t"<<nn_increase<<endl;
-
-			//compute the location of particles inside the cube
-			for (int i=1; i<=hh_d; i++){ //layers
-				if (i%2 != 0){ //odd-numbered layers
-					for (int j=1; j<=hh_m; j++){ //rows
-						if (j%2 != 0){ //odd-numbered rows
-							for (int k=1; k<=hh_n_odd; k++){ //columns
+			//compute the location of particles
+			for (int i=l0; i<l1; i++)
+			{
+				if ((i+1)%2 != 0) //odd-numbered layers
+				{
+					for (int j=m0_odd; j<m1_odd; j++)
+					{
+						if ((j+1)%2 != 0) //odd-numbered rows
+						{
+							for (int k=n0_odd; k<n1_odd; k++)
+							{
 								++nn;
-								pos_veloc(localXXmin+2*h_r+(k-1)*2*h_r,localYYmin+h_r+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,0,0,0);
-								pressure(h_r,h_r,h_r);
+								pos_veloc(vlx[0]+2.0*h_r+k*2.0*h_r,vly[0]+h_r+j*sqrt(3)*h_r,vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r,0,0,0);
+								pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 							}
 						}
-						else{
-							for (int k=1; k<=hh_n_even; k++){
+						else //even-numbered rows
+						{
+							for (int k=n0_even; k<n1_even; k++)
+							{
 								++nn;
-								pos_veloc(localXXmin+h_r+(k-1)*2*h_r,localYYmin+h_r+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,0,0,0);
-								pressure(h_r,h_r,h_r);
+								pos_veloc(vlx[0]+h_r+k*2.0*h_r,vly[0]+h_r+j*sqrt(3)*h_r,vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r,0,0,0);
+								pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 							}
 						}
 					}
 				}
-				else{ //even-numbered layers
-					for (int j=1; j<=hh_u; j++){ //rows
-						if (j%2 != 0){ //odd-numbered rows
-							for (int k=1; k<=hh_v_odd; k++){ //columns
+				else //even-numbered layers
+				{
+					for (int j=m0_even; j<m1_even; j++)
+					{
+						if ((j+1)%2 != 0) //odd-numbered rows
+						{
+							for (int k=nn0_odd; k<nn1_odd; k++)
+							{
 								++nn;;
-								pos_veloc(localXXmin+h_r+(k-1)*2*h_r,localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,0,0,0);
-								pressure(h_r,h_r,h_r);
+								pos_veloc(vlx[0]+h_r+k*2.0*h_r,vly[0]+sqrt(3)/3.0*h_r+j*sqrt(3)*h_r,vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r,0,0,0);
+								pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 							}
 						}
-						else{
-							for (int k=1; k<=hh_v_even; k++){
+						else //even-numbered rows
+						{
+							for (int k=nn0_even; k<nn1_even; k++)
+							{
 								++nn;;
-								pos_veloc(localXXmin+2*h_r+(k-1)*2*h_r,localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,0,0,0);
-								pressure(h_r,h_r,h_r);
+								pos_veloc(vlx[0]+2.0*h_r+k*2.0*h_r,vly[0]+sqrt(3)/3.0*h_r+j*sqrt(3)*h_r,vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r,0,0,0);
+								pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 							}
 						}
 					}
@@ -900,71 +878,76 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 	}
 	else
 	{
-		double xct,zct,xcf,ycf,zcf,x,y,z,dist, h_r = dx;
-		if(dim == 3){
-			int hh_m, hh_n_odd, hh_n_even, hh_u, hh_v_odd, hh_v_even, hh_d;
-			double hh_l, hh_w, hh_h;
-			hh_l = localXXmax-localXXmin; //length of domain on x-axis
-			hh_w = localYYmax-localYYmin; //width of domain on y-axis
-			hh_h = localZZmax-localZZmin; //height of domain on z-axis
+		double xct,zct,xcf,ycf,zcf,x,y,z,dist;
+		double h_r = 0.5*dx;
+		if(dim == 3)
+		{
+			int m0_odd, m1_odd, m0_even, m1_even, n0_odd, n1_odd, n0_even, n1_even;
+			int nn0_odd, nn1_odd, nn0_even, nn1_even;
 
-			//compute # of layers (hh_d)
-			int hh_e = (int)( (hh_h-h_r)/2/sqrt(6)/h_r*3 );
-			if (h_r+(hh_e+1)*2*sqrt(6)*h_r/3 <= hh_h)
-				hh_d = hh_e+2;
+			//layers
+			if (localZZmin-vlz[0]-h_r < 0.5*(2.0*sqrt(6)/3.0*h_r))
+				l0 = 0;
 			else
-				hh_d = hh_e+1;
+				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(2.0*sqrt(6)/3.0*h_r))/(2.0*sqrt(6)/3.0*h_r))+1;
+			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(2.0*sqrt(6)/3.0*h_r))/(2.0*sqrt(6)/3.0*h_r))+1;
 
-			//compute # of rows (hh_m) for odd-numbered layers
-			int hh_g = (int)((hh_w-h_r)/(sqrt(3)*h_r));
-			if (h_r+(hh_g+1)*sqrt(3)*h_r<=hh_w)
-				hh_m = hh_g+2;
+			//rows (for odd-numbered layers)
+			if (localYYmin-vly[0]-h_r < 0.5*(sqrt(3)*h_r))
+				m0_odd = 0;
 			else
-				hh_m = hh_g+1;
+				m0_odd = (int) ((localYYmin-vly[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			m1_odd = (int) ((localYYmax-vly[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-			//compute # of columns (hh_n_odd) for odd-numbered rows & odd-numbered layers
-			int hh_f1 = (int) ((hh_l-h_r)/h_r);
-			if (hh_f1%2 != 0)
-				hh_n_odd = (hh_f1+1)/2;
+			//columns (for odd-numbered layers & odd-numbered rows)
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				n0_odd = 0;
 			else
-				hh_n_odd = hh_f1/2;
+				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of columns (hh_n_even) for even-numbered rows & odd-numbered layers
-			int hh_f2 = (int) (hh_l/h_r);
-			if (hh_f2%2 != 0)
-				hh_n_even = (hh_f2+1)/2;
+			//columns (for odd-numbered layers & even-numbered rows)
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				n0_even = 0;
 			else
-				hh_n_even = hh_f2/2;
+				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of rows (hh_u) for even-numbered layers
-			int hh_a = (int)( (hh_w+(1-sqrt(3)/3)*h_r)/sqrt(3)/h_r );
-			if (sqrt(3)/3*h_r+(hh_a+1)*sqrt(3)*h_r<=hh_w)
-				hh_u = hh_a+2;
+			//rows (for even-numbered layers)
+			if (localYYmin-vly[0]-sqrt(3)/3.0*h_r < 0.5*(sqrt(3)*h_r))
+				m0_even = 0;
 			else
-				hh_u = hh_a+1;
+				m0_even = (int) ((localYYmin-vly[0]-sqrt(3)/3.0*h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			m1_even = (int) ((localYYmax-vly[0]-sqrt(3)/3.0*h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-			//compute # of columns (hh_v_odd) for odd-numbered rows & even-numbered layers
-			if (hh_f2%2 != 0)
-				hh_v_odd = (hh_f2+1)/2;
+			//columns (for even-numbered layers & odd-numbered rows)
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				nn0_odd = 0;
 			else
-				hh_v_odd = hh_f2/2;
+				nn0_odd = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			nn1_odd = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute # of columns (hh_v_even) for even-numbered rows & even-numbered layers
-			if (hh_f1%2 != 0)
-				hh_v_even = (hh_f1+1)/2;
+			//columns (for even-numbered layers & even-numbered rows)
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				nn0_even = 0;
 			else
-				hh_v_even = hh_f1/2;
+				nn0_even = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			nn1_even = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			//compute the location of particles inside the cyclinder
-			for (int i=1; i<=hh_d; i++){ //layers
-				if (i%2 != 0){ //odd-numbered layers
-					for (int j=1; j<=hh_m; j++){ //rows
-						if (j%2 != 0){ //odd-numbered rows
-							for (int k=1; k<=hh_n_odd; k++){ //columns
-
-								x = localXXmin+2*h_r+(k-1)*2*h_r;
-								y = localYYmin+h_r+(j-1)*sqrt(3)*h_r;
-								z = localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3;
+			//compute the location of particles
+			for (int i=l0; i<l1; i++) //layers
+			{
+				if ((i+1)%2 != 0) //odd-numbered layers
+				{
+					for (int j=m0_odd; j<m1_odd; j++)
+					{
+						if ((j+1)%2 != 0) //odd-numbered rows
+						{
+							for (int k=n0_odd; k<n1_odd; k++)
+							{
+								x = vlx[0]+2.0*h_r+k*2.0*h_r;
+								y = vly[0]+h_r+j*sqrt(3)*h_r;
+								z = vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r;
 								xct = x - xcen;
 								ycf = y - ycen;
 								zct = z - zcen;
@@ -988,16 +971,18 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
-									pos_veloc(localXXmin+2*h_r+(k-1)*2*h_r,localYYmin+h_r+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,u,v,w);
-									pressure(h_r,h_r,h_r);
+									pos_veloc(x,y,z,u,v,w);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 								}
 							}
 						}
-						else{
-							for (int k=1; k<=hh_n_even; k++){
-								x = localXXmin+h_r+(k-1)*2*h_r;
-								y = localYYmin+h_r+(j-1)*sqrt(3)*h_r;
-								z = localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3;
+						else //even-numbered rows
+						{
+							for (int k=n0_even; k<n1_even; k++)
+							{
+								x = vlx[0]+h_r+k*2.0*h_r;
+								y = vly[0]+h_r+j*sqrt(3)*h_r;
+								z = vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r;
 								xct = x - xcen;
 								ycf = y - ycen;
 								zct = z - zcen;
@@ -1021,20 +1006,24 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
-									pos_veloc(localXXmin+h_r+(k-1)*2*h_r,localYYmin+h_r+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,u,v,w);
-									pressure(h_r,h_r,h_r);
+									pos_veloc(x,y,z,u,v,w);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 								}
 							}
 						}
 					}
 				}
-				else{ //even-numbered layers
-					for (int j=1; j<=hh_u; j++){ //rows
-						if (j%2 != 0){ //odd-numbered rows
-							for (int k=1; k<=hh_v_odd; k++){ //columns
-								x = localXXmin+h_r+(k-1)*2*h_r;
-								y = localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r;
-								z = localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3;
+				else //even-numbered layers
+				{
+					for (int j=m0_even; j<m1_even; j++)
+					{
+						if ((j+1)%2 != 0) //odd-numbered rows
+						{
+							for (int k=nn0_odd; k<=nn1_odd; k++)
+							{
+								x = vlx[0]+h_r+k*2.0*h_r;
+								y = vly[0]+sqrt(3)/3.0*h_r+j*sqrt(3)*h_r;
+								z = vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r;
 								xct = x - xcen;
 								ycf = y - ycen;
 								zct = z - zcen;
@@ -1058,16 +1047,18 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
-									pos_veloc(localXXmin+h_r+(k-1)*2*h_r,localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,u,v,w);
-									pressure(h_r,h_r,h_r);
+									pos_veloc(x,y,z,u,v,w);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 								}
 							}
 						}
-						else{
-							for (int k=1; k<=hh_v_even; k++){
-								x = localXXmin+2*h_r+(k-1)*2*h_r;
-								y = localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r;
-								z = localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3;
+						else //even-numbered rows
+						{
+							for (int k=nn0_even; k<nn1_even; k++)
+							{
+								x = vlx[0]+2.0*h_r+k*2.0*h_r;
+								y = vly[0]+sqrt(3)/3.0*h_r+j*sqrt(3)*h_r;
+								z = vlz[0]+h_r+i*2.0*sqrt(6)/3.0*h_r;
 								xct = x - xcen;
 								ycf = y - ycen;
 								zct = z - zcen;
@@ -1091,8 +1082,8 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
-									pos_veloc(localXXmin+2*h_r+(k-1)*2*h_r,localYYmin+sqrt(3)*h_r/3+(j-1)*sqrt(3)*h_r,localZZmin+h_r+(i-1)*2*sqrt(6)*h_r/3,u,v,w);
-									pressure(h_r,h_r,h_r);
+									pos_veloc(x,y,z,u,v,w);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
 								}
 							}
 						}
@@ -1119,14 +1110,30 @@ void STORAGE::pressure(double dx,double dy,double dz)
 {
 	fld.rho.push_back(rho0);
 	fld.p.push_back(p0);
-	fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+	if (lattice == 1 || lattice == 2)
+	    fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+	else if (lattice == 3)
+    {
+        if (dim == 3)
+            fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
+        else if (dim == 2)
+            fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
+    }
 }
 
 void STORAGE::pressure(double dx,double dy,double dz,double value)
 {
 	fld.rho.push_back(rho0);
 	fld.p.push_back(value);
-	fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+	if (lattice == 1 || lattice == 2)
+	    fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+	else if (lattice == 3)
+    {
+        if (dim == 3)
+            fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
+        else if (dim == 2)
+            fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
+    }
 }
 
 void STORAGE::pressure_b(double dx,double dy,double dz)
