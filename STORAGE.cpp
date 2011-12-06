@@ -561,47 +561,49 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 		double h_r = 0.5*dx;
 		if (dim == 2)
 		{
-			int n0_odd, n1_odd, n0_even, n1_even;
+	    	int n0_odd, n1_odd, n0_even, n1_even;
 
-			if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
-				l0 = 0;
-			else
-				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
-			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+	    	if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
+	    		l0 = 0;
+	    	else
+	    		l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+	    	l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
-				n0_odd = 0;
-			else
-				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
-			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+	    	if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+	    		n0_odd = 0;
+	    	else
+	    		n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+	    	n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
-				n0_even = 0;
-			else
-				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
-			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+	    	if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+	    		n0_even = 0;
+	    	else
+	    		n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+	    	n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
 
-			//compute the location of particles
-			for (int i=l0; i<l1; i++)
-			{
-				if ((i+1)%2 != 0) //odd-numbered rows
-						{
-					for (int j=n0_odd; j<n1_odd; j++)
-					{
-						pos_veloc(vlx[0]+2.0*h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
-						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
-					}
-						}
-				else //even-numbered rows
-				{
-					for (int j=n0_even; j<n1_even; j++)
-					{
-						pos_veloc(vlx[0]+h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
-						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
-					}
-				}
-			}
+	    	//compute the location of particles
+	    	for (int i=l0; i<l1; i++)
+	    	{
+	    		if ((i+1)%2 != 0) //odd-numbered rows
+	    		{
+	    			for (int j=n0_odd; j<n1_odd; j++)
+	    			{
+	    				nn++;
+	    				pos_veloc(vlx[0]+2.0*h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+	    				pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+	    			}
+	    		}
+	    		else //even-numbered rows
+	    		{
+	    			for (int j=n0_even; j<n1_even; j++)
+	    			{
+	    				nn++;
+	    				pos_veloc(vlx[0]+h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+	    				pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+	    			}
+	    		}
+	    	}
 		}
 		if(dim == 3)
 		{
@@ -1091,6 +1093,102 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 				}
 			}
 		}
+		else if(dim == 2)
+		{
+			int n0_odd, n1_odd, n0_even, n1_even;
+
+			if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
+				l0 = 0;
+			else
+				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				n0_odd = 0;
+			else
+				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				n0_even = 0;
+			else
+				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+
+			//compute the location of particles
+			for (int i=l0; i<l1; i++) //rows
+			{
+				if ((i+1)%2 != 0) //odd-numbered rows
+						{
+					for (int j=n0_odd; j<n1_odd; j++)//columns
+							{
+
+						x = vlx[0]+2.0*h_r+j*2.0*h_r;
+						z = vlz[0]+h_r+i*sqrt(3)*h_r;
+						xct = x - xcen;
+						zct = z - zcen;
+						xcf = cos(-angle) * xct - sin(-angle) * zct;
+						zcf = sin(-angle) * xct + cos(-angle) * zct;
+						if(zcf > L)
+						{
+							dist = xcf * xcf + (zcf-L) * (zcf-L);
+							dist = sqrt(dist) - radius;
+						}
+						else if(zcf > -L)
+						{
+							dist = xcf * xcf;
+							dist = sqrt(dist) -radius;
+						}
+						else
+						{
+							dist = xcf * xcf + (zcf+L) * (zcf+L);
+							dist = sqrt(dist) - radius;
+						}
+						if (dist < 0)
+						{
+							nn++;
+							pos_veloc(x,0,z,u,0,w);
+							pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+
+						}
+							}//columns
+						}//odd-numbered rows
+				else //even-numbered rows
+				{
+					for (int j=n0_even; j<n1_even; j++)//columns
+					{
+						x = vlx[0]+h_r+j*2.0*h_r,0;
+						z = vlz[0]+h_r+i*sqrt(3)*h_r;
+						xct = x - xcen;
+						zct = z - zcen;
+						xcf = cos(-angle) * xct - sin(-angle) * zct;
+						zcf = sin(-angle) * xct + cos(-angle) * zct;
+						if(zcf > L)
+						{
+							dist = xcf * xcf + (zcf-L) * (zcf-L);
+							dist = sqrt(dist) - radius;
+						}
+						else if(zcf > -L)
+						{
+							dist = xcf * xcf;
+							dist = sqrt(dist) -radius;
+						}
+						else
+						{
+							dist = xcf * xcf + (zcf+L) * (zcf+L);
+							dist = sqrt(dist) - radius;
+						}
+						if (dist < 0)
+						{
+							nn++;
+							pos_veloc(x,0,z,u,0,w);
+							pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+
+						}
+					}//columns
+				}//even-numbered rows
+			}//rows
+		}//dim == 2
 	}
 }
 
