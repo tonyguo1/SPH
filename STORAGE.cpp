@@ -1422,6 +1422,8 @@ void STORAGE::Initialization(string input)
 	line.str(lines_of_text[line_num]);
 	line>>coefficient;
 	h=coefficient*sqrt(dx*dx+dy*dy+dz*dz);
+	if (lattice == 3)
+		h = 1.2 * dx;
 	line_num++;
 	N = (int)((vlx[1] - vlx[0] + 0.000001*dx)/dx);
 	M = (int)((vly[1] - vly[0] + 0.000001*dy)/dy);
@@ -2173,7 +2175,10 @@ void STORAGE::allocation()
 	else
 		l0 = (int)((localvlz[0]-vlz[0])/dz) + 1;
 	l1 = (int)((min(vlz[1],localvlz[1])+(1e-10)*dz-vlz[0])/dz);
-	scalar = new double[(n1-n0+1) * (m1-m0+1) * (l1-l0+1)];
+	if (dim == 3)
+		scalar = new double[(n1-n0+1) * (m1-m0+1) * (l1-l0+1)];
+	else
+		scalar = new double[(n1-n0+1) * (l1-l0+1)];
 }
 
 void STORAGE::GetB(double x,double y,double z,double t,double B[])
@@ -12513,6 +12518,13 @@ void STORAGE::ParticleNumberSync()
 void STORAGE::StatesPrint(int step, double time, char* statesname, const char* outputname)
 {
 	//buildmesh
+	double dtemp = dx;
+	if (lattice == 3)
+	{
+		dx = 1.1 * dx;
+		dy = 1.1 * dy;
+		dz = 1.1 * dz;
+	}
 	int n0,n1,m0,m1,l0,l1;
 	if ((localvlx[0] - vlx[0]< 0) || (localvlx[0] == vlx[0]))
 		n0 = 0;
@@ -12541,714 +12553,820 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	//		for (int j = 0;j<(m1-m0+1); j++)
 	//			scalar[i][j] = new double[l1-l0+1];
 	//	}
-	for (int i = 0; i<(n1-n0+1); i++)
-		for (int j = 0;j<(m1-m0+1); j++)
-			for (int k = 0;k<(l1-l0+1);k++)
-			{
-				int index = Index3D(i,j,k,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-				if (statesname[0] == 'D' || statesname[0] == 'p')
-					scalar[index] = 0;
-				else if (statesname[0] == 'p' || statesname[0] == 'p')
-					scalar[index] = 0;
-				else
-					scalar[index] = -1;
-			}
 	double origin[3];
 	origin[0] = vlx[0] + n0 * dx;
 	origin[1] = vly[0] + m0 * dy;
 	origin[2] = vlz[0] + l0 * dz;
-	//finish mesh building
-
-	//locate position
-	for (size_t i = nbb;i<np;i++)
+	if (dim == 3)
 	{
-		if (xp[i] <= vlx[0]+0.0000001 || xp[i] >= vlx[1]-0.0000001 ||
-				yp[i] <= vly[0]+0.0000001 || yp[i] >= vly[1]-0.0000001 ||
-				zp[i] <= vlz[0]+0.0000001 || zp[i] >= vlz[1]-0.0000001)
-			continue;
-		double distx,disty,distz; //to the origin
-		distx = xp[i] - origin[0];
-		disty = yp[i] - origin[1];
-		distz = zp[i] - origin[2];
-		int icell,jcell,kcell;
-		if (distx >= -dx && distx <0)
-		{
-			icell = -1;
-		}
-		else if (distx >=0 && distx < (n1-n0 + 1) * dx)
-		{
-			icell = (int)(distx / dx);
-		}
-		else
-			continue;
-		if (disty >= -dy && disty <0)
-		{
-			jcell = -1;
-		}
-		else if (disty >=0 && disty < (m1-m0 + 1) * dy)
-		{
-			jcell = (int)(disty / dy);
-		}
-		else
-			continue;
-		if (distz >= -dz && distz <0)
-		{
-			kcell = -1;
-		}
-		else if (distz >=0 && distz < (l1-l0 + 1) * dz)
-		{
-			kcell = (int)(distz / dz);
-		}
-		else
-			continue;
-		if (icell>=0 && icell <= (n1-n0-1) &&
-				jcell>=0 && jcell <= (m1-m0-1) &&
-				kcell>=0 && kcell <= (l1-l0-1))
-		{
-			double x0,x1,y0,y1,z0,z1;
-			x0 = origin[0] + icell * dx;
-			x1 = x0 + dx;
-			y0 = origin[1] + jcell * dy;
-			y1 = y0 + dy;
-			z0 = origin[2] + kcell * dz;
-			z1 = z0 + dz;
-			double distancex[2],distancey[2],distancez[2]; //to faces
-			distancex[0] = (xp[i] - x0)/dx;
-			distancex[1] = (x1 - xp[i])/dx;
-			distancey[0] = (yp[i] - y0)/dy;
-			distancey[1] = (y1 - yp[i])/dy;
-			distancez[0] = (zp[i] - z0)/dz;
-			distancez[1] = (z1 - zp[i])/dz;
-			//get volumn fraction
-			double volumn[8]={0};
-			//index
-			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-			double volumn_inverse[8];
-			for (int count1 = 0; count1<8; count1++)
-			{
-				volumn_inverse[count1] = 1;
-				for (int count2 = 0; count2<8; count2++)
+		for (int i = 0; i<(n1-n0+1); i++)
+			for (int j = 0;j<(m1-m0+1); j++)
+				for (int k = 0;k<(l1-l0+1);k++)
 				{
-					if (count1 == count2) continue;
+					int index = Index3D(i,j,k,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						scalar[index] = 0;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						scalar[index] = 0;
 					else
-						volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+						scalar[index] = -1;
 				}
-			}
-			double total=0;
-			for (int count1 = 0; count1<8; count1++)
-				total = total + volumn_inverse[count1];
-			for (int count1 = 0; count1<8; count1++)
-			{
-				if (statesname[0] == 'D' || statesname[0] == 'p')
-					volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-				else if (statesname[0] == 'p' || statesname[0] == 'p')
-					volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-				else
-					volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
-			}
+		//finish mesh building
 
-			//deposit value
-			int index;
-			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[0];
-			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[1];
-			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[2];
-			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[3];
-			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[4];
-			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[5];
-			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[6];
-			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[7];
-		}
-		//		else if(icell == -1 && jcell == -1 && kcell == -1)
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] - dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] - dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] - dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[6];
-		//		}
-		//		else if (icell==-1 && jcell==-1 &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] - dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] - dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[2];
-		//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[6];
-		//		}
-		else if (icell == (n1-n0) &&
-				jcell>=0 && jcell <= (m1-m0-1) &&
-				kcell>=0 && kcell <= (l1-l0-1))
+		//locate position
+		for (size_t i = nbb;i<np;i++)
 		{
-			double x0,x1,y0,y1,z0,z1;
-			x0 = origin[0] + icell * dx;
-			x1 = x0 + dx;
-			y0 = origin[1] + jcell * dy;
-			y1 = y0 + dy;
-			z0 = origin[2] + kcell * dz;
-			z1 = z0 + dz;
-			double distancex[2],distancey[2],distancez[2]; //to faces
-			distancex[0] = (xp[i] - x0)/dx;
-			distancex[1] = (x1 - xp[i])/dx;
-			distancey[0] = (yp[i] - y0)/dy;
-			distancey[1] = (y1 - yp[i])/dy;
-			distancez[0] = (zp[i] - z0)/dz;
-			distancez[1] = (z1 - zp[i])/dz;
-			//get volumn fraction
-			double volumn[8]={0};
-			//index
-			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-			double volumn_inverse[8];
-			for (int count1 = 0; count1<8; count1++)
+			if (xp[i] <= vlx[0]+0.0000001 || xp[i] >= vlx[1]-0.0000001 ||
+					yp[i] <= vly[0]+0.0000001 || yp[i] >= vly[1]-0.0000001 ||
+					zp[i] <= vlz[0]+0.0000001 || zp[i] >= vlz[1]-0.0000001)
+				continue;
+			double distx,disty,distz; //to the origin
+			distx = xp[i] - origin[0];
+			disty = yp[i] - origin[1];
+			distz = zp[i] - origin[2];
+			int icell,jcell,kcell;
+			if (distx >= -dx && distx <0)
 			{
-				volumn_inverse[count1] = 1;
-				for (int count2 = 0; count2<8; count2++)
+				icell = -1;
+			}
+			else if (distx >=0 && distx < (n1-n0 + 1) * dx)
+			{
+				icell = (int)(distx / dx);
+			}
+			else
+				continue;
+			if (disty >= -dy && disty <0)
+			{
+				jcell = -1;
+			}
+			else if (disty >=0 && disty < (m1-m0 + 1) * dy)
+			{
+				jcell = (int)(disty / dy);
+			}
+			else
+				continue;
+			if (distz >= -dz && distz <0)
+			{
+				kcell = -1;
+			}
+			else if (distz >=0 && distz < (l1-l0 + 1) * dz)
+			{
+				kcell = (int)(distz / dz);
+			}
+			else
+				continue;
+			if (icell>=0 && icell <= (n1-n0-1) &&
+					jcell>=0 && jcell <= (m1-m0-1) &&
+					kcell>=0 && kcell <= (l1-l0-1))
+			{
+				double x0,x1,y0,y1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				y0 = origin[1] + jcell * dy;
+				y1 = y0 + dy;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancey[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancey[0] = (yp[i] - y0)/dy;
+				distancey[1] = (y1 - yp[i])/dy;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[8]={0};
+				//index
+				//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+				//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+				volumn[0] = distancex[0] * distancey[0] * distancez[0];
+				volumn[1] = distancex[1] * distancey[0] * distancez[0];
+				volumn[2] = distancex[1] * distancey[1] * distancez[0];
+				volumn[3] = distancex[0] * distancey[1] * distancez[0];
+				volumn[4] = distancex[0] * distancey[0] * distancez[1];
+				volumn[5] = distancex[1] * distancey[0] * distancez[1];
+				volumn[6] = distancex[1] * distancey[1] * distancez[1];
+				volumn[7] = distancex[0] * distancey[1] * distancez[1];
+				double volumn_inverse[8];
+				for (int count1 = 0; count1<8; count1++)
 				{
-					if (count1 == count2) continue;
-					else
-						volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					volumn_inverse[count1] = 1;
+					for (int count2 = 0; count2<8; count2++)
+					{
+						if (count1 == count2) continue;
+						else
+							volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					}
 				}
-			}
-			double total=0;
-			for (int count1 = 0; count1<8; count1++)
-				total = total + volumn_inverse[count1];
-			for (int count1 = 0; count1<8; count1++)
-			{
-				if (statesname[0] == 'D' || statesname[0] == 'p')
-					volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-				else if (statesname[0] == 'p' || statesname[0] == 'p')
-					volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-				else
-					volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
-			}
+				double total=0;
+				for (int count1 = 0; count1<8; count1++)
+					total = total + volumn_inverse[count1];
+				for (int count1 = 0; count1<8; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else
+						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
+				}
 
-			//deposit value
-			int index;
-			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[0];
-			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[3];
-			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[4];
-			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[7];
+				//deposit value
+				int index;
+				index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[0];
+				index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[1];
+				index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[2];
+				index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[3];
+				index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[4];
+				index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[5];
+				index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[6];
+				index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[7];
+			}
+			//		else if(icell == -1 && jcell == -1 && kcell == -1)
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] - dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] - dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] - dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[6];
+			//		}
+			//		else if (icell==-1 && jcell==-1 &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] - dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] - dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[2];
+			//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[6];
+			//		}
+			else if (icell == (n1-n0) &&
+					jcell>=0 && jcell <= (m1-m0-1) &&
+					kcell>=0 && kcell <= (l1-l0-1))
+			{
+				double x0,x1,y0,y1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				y0 = origin[1] + jcell * dy;
+				y1 = y0 + dy;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancey[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancey[0] = (yp[i] - y0)/dy;
+				distancey[1] = (y1 - yp[i])/dy;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[8]={0};
+				//index
+				//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+				//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+				volumn[0] = distancex[0] * distancey[0] * distancez[0];
+				volumn[1] = distancex[1] * distancey[0] * distancez[0];
+				volumn[2] = distancex[1] * distancey[1] * distancez[0];
+				volumn[3] = distancex[0] * distancey[1] * distancez[0];
+				volumn[4] = distancex[0] * distancey[0] * distancez[1];
+				volumn[5] = distancex[1] * distancey[0] * distancez[1];
+				volumn[6] = distancex[1] * distancey[1] * distancez[1];
+				volumn[7] = distancex[0] * distancey[1] * distancez[1];
+				double volumn_inverse[8];
+				for (int count1 = 0; count1<8; count1++)
+				{
+					volumn_inverse[count1] = 1;
+					for (int count2 = 0; count2<8; count2++)
+					{
+						if (count1 == count2) continue;
+						else
+							volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					}
+				}
+				double total=0;
+				for (int count1 = 0; count1<8; count1++)
+					total = total + volumn_inverse[count1];
+				for (int count1 = 0; count1<8; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else
+						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
+				}
+
+				//deposit value
+				int index;
+				index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[0];
+				index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[3];
+				index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[4];
+				index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[7];
+			}
+			else if (icell == -1 &&
+					jcell>=0 && jcell <= (m1-m0-1) &&
+					kcell>=0 && kcell <= (l1-l0-1))
+			{
+				double x0,x1,y0,y1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				y0 = origin[1] + jcell * dy;
+				y1 = y0 + dy;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancey[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancey[0] = (yp[i] - y0)/dy;
+				distancey[1] = (y1 - yp[i])/dy;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[8]={0};
+				//index
+				//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+				//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+				volumn[0] = distancex[0] * distancey[0] * distancez[0];
+				volumn[1] = distancex[1] * distancey[0] * distancez[0];
+				volumn[2] = distancex[1] * distancey[1] * distancez[0];
+				volumn[3] = distancex[0] * distancey[1] * distancez[0];
+				volumn[4] = distancex[0] * distancey[0] * distancez[1];
+				volumn[5] = distancex[1] * distancey[0] * distancez[1];
+				volumn[6] = distancex[1] * distancey[1] * distancez[1];
+				volumn[7] = distancex[0] * distancey[1] * distancez[1];
+				double volumn_inverse[8];
+				for (int count1 = 0; count1<8; count1++)
+				{
+					volumn_inverse[count1] = 1;
+					for (int count2 = 0; count2<8; count2++)
+					{
+						if (count1 == count2) continue;
+						else
+							volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					}
+				}
+				double total=0;
+				for (int count1 = 0; count1<8; count1++)
+					total = total + volumn_inverse[count1];
+				for (int count1 = 0; count1<8; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else
+						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
+				}
+
+				int index;
+				index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[1];
+				index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[2];
+				index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[5];
+				index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[6];
+			}
+			//		else if (icell>=0 && icell <= (n1-n0-1) &&
+			//				jcell == (m1-m0) &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[0];
+			//			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[1];
+			//			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[4];
+			//			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[5];
+			//		}
+			//		else if (icell>=0 && icell <= (n1-n0-1) &&
+			//				jcell == -1 &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[2];
+			//			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[3];
+			//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[6];
+			//			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[7];
+			//		}
+			//		if (icell == -1 &&
+			//				jcell == -1 &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[2];
+			//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[6];
+			//		}
+			//		if (icell == -1 &&
+			//				jcell == (m1-m0) &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[1];
+			//			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[5];
+			//		}
+			//		if (icell == n1-n0 &&
+			//				jcell == -1 &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[3];
+			//			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[7];
+			//		}
+			//		if (icell == (n1-n0) &&
+			//				jcell == (m1-m0) &&
+			//				kcell>=0 && kcell <= (l1-l0-1))
+			//		{
+			//			double x0,x1,y0,y1,z0,z1;
+			//			x0 = origin[0] + icell * dx;
+			//			x1 = x0 + dx;
+			//			y0 = origin[1] + jcell * dy;
+			//			y1 = y0 + dy;
+			//			z0 = origin[2] + kcell * dz;
+			//			z1 = z0 + dz;
+			//			double distancex[2],distancey[2],distancez[2]; //to faces
+			//			distancex[0] = (xp[i] - x0)/dx;
+			//			distancex[1] = (x1 - xp[i])/dx;
+			//			distancey[0] = (yp[i] - y0)/dy;
+			//			distancey[1] = (y1 - yp[i])/dy;
+			//			distancez[0] = (zp[i] - z0)/dz;
+			//			distancez[1] = (z1 - zp[i])/dz;
+			//			//get volumn fraction
+			//			double volumn[8]={0};
+			//			//index
+			//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+			//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+			//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
+			//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
+			//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
+			//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
+			//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
+			//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
+			//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
+			//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
+			//			double volumn_inverse[8];
+			//			for (int i = 0; i<8; i++)
+			//			{
+			//				volumn_inverse[i] = 1;
+			//				for (int j = 0; j<8; j++)
+			//				{
+			//					if (i == j) continue;
+			//					else
+			//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
+			//				}
+			//			}
+			//			double total=0;
+			//			for (int i = 0; i<8; i++)
+			//				total = total + volumn_inverse[i];
+			//			for (int i = 0; i<8; i++)
+			//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
+			//
+			//			//deposit value
+			//			int index;
+			//			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[0];
+			//			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+			//			scalar[index] += volumn_inverse[4];
+			//		}
 		}
-		else if (icell == -1 &&
-				jcell>=0 && jcell <= (m1-m0-1) &&
-				kcell>=0 && kcell <= (l1-l0-1))
+	}
+	else
+	{
+		for (int i = 0; i<(n1-n0+1); i++)
+				for (int k = 0;k<(l1-l0+1);k++)
+				{
+					int index = i + k * (n1-n0+1);
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						scalar[index] = 0;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						scalar[index] = 0;
+					else
+						scalar[index] = -1;
+				}
+		//finish mesh building
+
+		//locate position
+		for (size_t i = nbb;i<np;i++)
 		{
-			double x0,x1,y0,y1,z0,z1;
-			x0 = origin[0] + icell * dx;
-			x1 = x0 + dx;
-			y0 = origin[1] + jcell * dy;
-			y1 = y0 + dy;
-			z0 = origin[2] + kcell * dz;
-			z1 = z0 + dz;
-			double distancex[2],distancey[2],distancez[2]; //to faces
-			distancex[0] = (xp[i] - x0)/dx;
-			distancex[1] = (x1 - xp[i])/dx;
-			distancey[0] = (yp[i] - y0)/dy;
-			distancey[1] = (y1 - yp[i])/dy;
-			distancez[0] = (zp[i] - z0)/dz;
-			distancez[1] = (z1 - zp[i])/dz;
-			//get volumn fraction
-			double volumn[8]={0};
-			//index
-			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-			double volumn_inverse[8];
-			for (int count1 = 0; count1<8; count1++)
+			if (xp[i] <= vlx[0]+0.0000001 || xp[i] >= vlx[1]-0.0000001 ||
+					zp[i] <= vlz[0]+0.0000001 || zp[i] >= vlz[1]-0.0000001)
+				continue;
+			double distx,distz; //to the origin
+			distx = xp[i] - origin[0];
+			distz = zp[i] - origin[2];
+			int icell,jcell,kcell;
+			if (distx >= -dx && distx <0)
 			{
-				volumn_inverse[count1] = 1;
-				for (int count2 = 0; count2<8; count2++)
+				icell = -1;
+			}
+			else if (distx >=0 && distx < (n1-n0 + 1) * dx)
+			{
+				icell = (int)(distx / dx);
+			}
+			else
+				continue;
+			if (distz >= -dz && distz <0)
+			{
+				kcell = -1;
+			}
+			else if (distz >=0 && distz < (l1-l0 + 1) * dz)
+			{
+				kcell = (int)(distz / dz);
+			}
+			else
+				continue;
+			if (icell>=0 && icell <= (n1-n0-1) &&
+					kcell>=0 && kcell <= (l1-l0-1))
+			{
+				double x0,x1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[4]={0};
+				//index
+				//0:west-south; 1:east-south; 2:east-north; 3:west-north
+				volumn[0] = distancex[0] * distancez[0];
+				volumn[1] = distancex[1] * distancez[0];
+				volumn[2] = distancex[0] * distancez[1];
+				volumn[3] = distancex[1] * distancez[1];
+				double volumn_inverse[8];
+				for (int count1 = 0; count1<4; count1++)
 				{
-					if (count1 == count2) continue;
-					else
-						volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					volumn_inverse[count1] = 1;
+					for (int count2 = 0; count2<4; count2++)
+					{
+						if (count1 == count2) continue;
+						else
+							volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+					}
 				}
-			}
-			double total=0;
-			for (int count1 = 0; count1<8; count1++)
-				total = total + volumn_inverse[count1];
-			for (int count1 = 0; count1<8; count1++)
-			{
-				if (statesname[0] == 'D' || statesname[0] == 'p')
-					volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-				else if (statesname[0] == 'p' || statesname[0] == 'p')
-					volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-				else
-					volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
-			}
+				double total=0;
+				for (int count1 = 0; count1<4; count1++)
+					total = total + volumn_inverse[count1];
+				for (int count1 = 0; count1<4; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'p')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'p' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else
+						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
+				}
 
-			int index;
-			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[1];
-			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[2];
-			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[5];
-			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-			scalar[index] += volumn_inverse[6];
+				//deposit value
+				int index;
+				index = icell + kcell * (n1-n0+1);
+				scalar[index] += volumn_inverse[0];
+				index = (icell + 1) + kcell * (n1-n0+1);
+				scalar[index] += volumn_inverse[1];
+				index = icell + (kcell + 1) * (n1-n0+1);
+				scalar[index] += volumn_inverse[2];
+				index = (icell + 1) + (kcell + 1) * (n1-n0+1);
+				scalar[index] += volumn_inverse[3];
+			}
 		}
-		//		else if (icell>=0 && icell <= (n1-n0-1) &&
-		//				jcell == (m1-m0) &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[0];
-		//			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[1];
-		//			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[4];
-		//			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[5];
-		//		}
-		//		else if (icell>=0 && icell <= (n1-n0-1) &&
-		//				jcell == -1 &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[2];
-		//			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[3];
-		//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[6];
-		//			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[7];
-		//		}
-		//		if (icell == -1 &&
-		//				jcell == -1 &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[2];
-		//			index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[6];
-		//		}
-		//		if (icell == -1 &&
-		//				jcell == (m1-m0) &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[1];
-		//			index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[5];
-		//		}
-		//		if (icell == n1-n0 &&
-		//				jcell == -1 &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[3];
-		//			index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[7];
-		//		}
-		//		if (icell == (n1-n0) &&
-		//				jcell == (m1-m0) &&
-		//				kcell>=0 && kcell <= (l1-l0-1))
-		//		{
-		//			double x0,x1,y0,y1,z0,z1;
-		//			x0 = origin[0] + icell * dx;
-		//			x1 = x0 + dx;
-		//			y0 = origin[1] + jcell * dy;
-		//			y1 = y0 + dy;
-		//			z0 = origin[2] + kcell * dz;
-		//			z1 = z0 + dz;
-		//			double distancex[2],distancey[2],distancez[2]; //to faces
-		//			distancex[0] = (xp[i] - x0)/dx;
-		//			distancex[1] = (x1 - xp[i])/dx;
-		//			distancey[0] = (yp[i] - y0)/dy;
-		//			distancey[1] = (y1 - yp[i])/dy;
-		//			distancez[0] = (zp[i] - z0)/dz;
-		//			distancez[1] = (z1 - zp[i])/dz;
-		//			//get volumn fraction
-		//			double volumn[8]={0};
-		//			//index
-		//			//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
-		//			//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
-		//			volumn[0] = distancex[0] * distancey[0] * distancez[0];
-		//			volumn[1] = distancex[1] * distancey[0] * distancez[0];
-		//			volumn[2] = distancex[1] * distancey[1] * distancez[0];
-		//			volumn[3] = distancex[0] * distancey[1] * distancez[0];
-		//			volumn[4] = distancex[0] * distancey[0] * distancez[1];
-		//			volumn[5] = distancex[1] * distancey[0] * distancez[1];
-		//			volumn[6] = distancex[1] * distancey[1] * distancez[1];
-		//			volumn[7] = distancex[0] * distancey[1] * distancez[1];
-		//			double volumn_inverse[8];
-		//			for (int i = 0; i<8; i++)
-		//			{
-		//				volumn_inverse[i] = 1;
-		//				for (int j = 0; j<8; j++)
-		//				{
-		//					if (i == j) continue;
-		//					else
-		//						volumn_inverse[i] = volumn_inverse[i] * volumn[j];
-		//				}
-		//			}
-		//			double total=0;
-		//			for (int i = 0; i<8; i++)
-		//				total = total + volumn_inverse[i];
-		//			for (int i = 0; i<8; i++)
-		//				volumn_inverse[i] = 2 * volumn_inverse[i] / total;
-		//
-		//			//deposit value
-		//			int index;
-		//			index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[0];
-		//			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-		//			scalar[index] += volumn_inverse[4];
-		//		}
 	}
 
 
@@ -13267,10 +13385,10 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 		fprintf(outfile,"The actual time is %.8f\n",time);
 		fprintf(outfile,"ASCII\n");
 		fprintf(outfile,"DATASET STRUCTURED_POINTS\n");
-		fprintf(outfile,"DIMENSIONS %d %d %d\n",dimension[0],dimension[1],dimension[2]);
-		fprintf(outfile,"SPACING %lf %lf %lf\n",dx,dy,dz);
-		fprintf(outfile,"ORIGIN %lf %lf %lf\n", origin[0]+0.5*dx,origin[1]+0.5*dy,origin[2]+0.5*dz);
-		fprintf(outfile,"POINT_DATA %d\n",(dimension[0])*(dimension[1])*(dimension[2]));
+		fprintf(outfile,"DIMENSIONS %d %d %d\n",dimension[0],1,dimension[2]);
+		fprintf(outfile,"SPACING %lf %lf %lf\n",dx,0,dz);
+		fprintf(outfile,"ORIGIN %lf %lf %lf\n", origin[0]+0.5*dx,0,origin[2]+0.5*dz);
+		fprintf(outfile,"POINT_DATA %d\n",(dimension[0])*(dimension[2]));
 	}
 	else
 		outfile = fopen(filename,"a");
@@ -13283,13 +13401,18 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	fprintf(outfile,"LOOKUP_TABLE default\n");
 
 	for (int k = 0;k<(l1-l0+1);k++)
-		for (int j = 0;j<(m1-m0+1); j++)
 			for (int i = 0; i<(n1-n0+1); i++)
 			{
-				int index = Index3D(i,j,k,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				int index = i + k * (n1 - n0 + 1);
 				fprintf(outfile,"%.16g\n",scalar[index]);
 			}
 	fclose(outfile);
+	if (lattice == 3)
+	{
+		dx = dtemp;
+		dy = dtemp;
+		dz = dtemp;
+	}
 }
 
 int STORAGE::exists(const char *fname)
