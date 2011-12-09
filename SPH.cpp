@@ -129,12 +129,12 @@ int main(int argc, char **argv) {
 	if (store.i_restartRun != 1)
 	{
 		store.print_out(0,0,output.c_str());
-		store.StatesPrint(0,0,"Density",output.c_str());
-		store.StatesPrint(0,0,"Pressure",output.c_str());
-		store.StatesPrint(0,0,"Interface",output.c_str());
+//		store.StatesPrint(0,0,"Density",output.c_str());
+//		store.StatesPrint(0,0,"Pressure",output.c_str());
+//		store.StatesPrint(0,0,"Interface",output.c_str());
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-	while (solve->time < store.tmax && solve->itime < 40000)
+	while (solve->time < store.tmax && solve->itime < 50000)
 	{
 		solve->ModifyDtForPrint();
 		solve->time+=solve->dt;
@@ -152,17 +152,17 @@ int main(int argc, char **argv) {
 		{
 			store.i_output = 0;
 			store.print_out(store.nprint,solve->time,output.c_str());
-			store.StatesPrint(store.nprint,solve->time,"Density",output.c_str());
-			store.StatesPrint(store.nprint,solve->time,"Pressure",output.c_str());
-			store.StatesPrint(store.nprint,solve->time,"Interface",output.c_str());
+//			store.StatesPrint(store.nprint,solve->time,"Density",output.c_str());
+//			store.StatesPrint(store.nprint,solve->time,"Pressure",output.c_str());
+//			store.StatesPrint(store.nprint,solve->time,"Interface",output.c_str());
 		}
 	}
 	if (solve->time < store.tmax)
 	{
 		store.print_out(++store.nprint,solve->time,output.c_str());
-		store.StatesPrint(store.nprint,solve->time,"Density",output.c_str());
-		store.StatesPrint(store.nprint,solve->time,"Pressure",output.c_str());
-		store.StatesPrint(store.nprint,solve->time,"Interface",output.c_str());
+//		store.StatesPrint(store.nprint,solve->time,"Density",output.c_str());
+//		store.StatesPrint(store.nprint,solve->time,"Pressure",output.c_str());
+//		store.StatesPrint(store.nprint,solve->time,"Interface",output.c_str());
 	}
 	if (store.id == 0)
 	{

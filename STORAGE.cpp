@@ -529,8 +529,8 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 								}
 							}
 							//for debugging
-//							double value;
-//							value = p0 * (vlx[0]+(i+0.5));
+							//							double value;
+							//							value = p0 * (vlx[0]+(i+0.5));
 							//end for debugging
 							nn++;
 							pos_veloc(vlx[0]+(i+0.5)*dx,vly[0]+(j+0.5)*dx,vlz[0]+(k+0.5)*dx,u,v,w);
@@ -561,49 +561,49 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 		double h_r = 0.5*dx;
 		if (dim == 2)
 		{
-	    	int n0_odd, n1_odd, n0_even, n1_even;
+			int n0_odd, n1_odd, n0_even, n1_even;
 
-	    	if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
-	    		l0 = 0;
-	    	else
-	    		l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
-	    	l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			if (localZZmin-vlz[0]-h_r < 0.5*(sqrt(3)*h_r))
+				l0 = 0;
+			else
+				l0 = (int) ((localZZmin-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
+			l1 = (int) ((localZZmax-vlz[0]-h_r-0.4999999*(sqrt(3)*h_r))/(sqrt(3)*h_r))+1;
 
-	    	if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
-	    		n0_odd = 0;
-	    	else
-	    		n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
-	    	n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			if (localXXmin-vlx[0]-2.0*h_r < 0.5*(2.0*h_r))
+				n0_odd = 0;
+			else
+				n0_odd = (int) ((localXXmin-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_odd = (int) ((localXXmax-vlx[0]-2.0*h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
-	    	if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
-	    		n0_even = 0;
-	    	else
-	    		n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
-	    	n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			if (localXXmin-vlx[0]-h_r < 0.5*(2.0*h_r))
+				n0_even = 0;
+			else
+				n0_even = (int) ((localXXmin-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
+			n1_even = (int) ((localXXmax-vlx[0]-h_r-0.4999999*(2.0*h_r))/(2.0*h_r))+1;
 
 
-	    	//compute the location of particles
-	    	for (int i=l0; i<l1; i++)
-	    	{
-	    		if ((i+1)%2 != 0) //odd-numbered rows
-	    		{
-	    			for (int j=n0_odd; j<n1_odd; j++)
-	    			{
-	    				nn++;
-	    				pos_veloc(vlx[0]+2.0*h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
-	    				pressure(2.0*h_r,2.0*h_r,2.0*h_r);
-	    			}
-	    		}
-	    		else //even-numbered rows
-	    		{
-	    			for (int j=n0_even; j<n1_even; j++)
-	    			{
-	    				nn++;
-	    				pos_veloc(vlx[0]+h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
-	    				pressure(2.0*h_r,2.0*h_r,2.0*h_r);
-	    			}
-	    		}
-	    	}
+			//compute the location of particles
+			for (int i=l0; i<l1; i++)
+			{
+				if ((i+1)%2 != 0) //odd-numbered rows
+				{
+					for (int j=n0_odd; j<n1_odd; j++)
+					{
+						nn++;
+						pos_veloc(vlx[0]+2.0*h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+					}
+				}
+				else //even-numbered rows
+				{
+					for (int j=n0_even; j<n1_even; j++)
+					{
+						nn++;
+						pos_veloc(vlx[0]+h_r+j*2.0*h_r,0,vlz[0]+h_r+i*sqrt(3)*h_r,0,0,0);
+						pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+					}
+				}
+			}
 		}
 		if(dim == 3)
 		{
@@ -719,9 +719,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 {
 	double angle = atan(1);
 	double L = length/2;
-	u = 25 * sin(angle);
-	v = 0;
-	w = -25 * cos(angle);
+	//	u = 0;//25 * sin(angle);
+	//	v = 0;
+	//	w = 0;//-25 * cos(angle);
 	XXmin=xcen-(radius+L);
 	XXmax=xcen+(radius+L);
 	YYmin=ycen-(radius);
@@ -750,6 +750,7 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 			(ZZmin <= localvlz[0] && ZZmax >=localvlz[1]))
 		i_intersectz = 1;
 	// Intersect in computational domain
+	if (dim == 2) i_intersecty = 1;
 	if (i_intersectx * i_intersecty * i_intersectz == 1)
 	{
 		localXXmin = std::max(XXmin,localvlx[0]);
@@ -867,13 +868,25 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 						if (lattice == 2)
 						{
 							nn++;
+							xct = (i+0.25)*dx - xcen;
+							zct = (k+0.25)*dx - zcen;
+							double p = p0 * exp(-(xct * xct + zct *zct)/0.0265);
 							pos_veloc((i+0.25)*dx,0,(k+0.25)*dx,u,0,w);
-							pressure(dx,dy,dz);
+							pressure(dx,dy,dz,p);
 							nn++;
+							xct = (i+0.75)*dx - xcen;
+							zct = (k+0.75)*dx - zcen;
+							p = p0 * exp(-(xct * xct + zct *zct)/0.0265);
 							pos_veloc((i+0.75)*dx,0,(k+0.75)*dx,u,0,w);
-							pressure(dx,dy,dz);
+							pressure(dx,dy,dz,p);
 						}
-						else assert(0);
+						else
+						{
+							nn++;
+							double p = p0 * exp(-(xct * xct + zct *zct)/0.0265);
+							pos_veloc((i+0.5)*dx,0,(k+0.5)*dx,u,0,w);
+							pressure(dx,dy,dz,p);
+						}
 					}
 				}
 		}
@@ -1119,9 +1132,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 			for (int i=l0; i<l1; i++) //rows
 			{
 				if ((i+1)%2 != 0) //odd-numbered rows
-						{
+				{
 					for (int j=n0_odd; j<n1_odd; j++)//columns
-							{
+					{
 
 						x = vlx[0]+2.0*h_r+j*2.0*h_r;
 						z = vlz[0]+h_r+i*sqrt(3)*h_r;
@@ -1147,12 +1160,13 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 						if (dist < 0)
 						{
 							nn++;
+							double p = p0 * exp(-(xct * xct + zct *zct)/0.0265);
 							pos_veloc(x,0,z,u,0,w);
-							pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+							pressure(2.0*h_r,2.0*h_r,2.0*h_r,p);
 
 						}
-							}//columns
-						}//odd-numbered rows
+					}//columns
+				}//odd-numbered rows
 				else //even-numbered rows
 				{
 					for (int j=n0_even; j<n1_even; j++)//columns
@@ -1181,8 +1195,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 						if (dist < 0)
 						{
 							nn++;
+							double p = p0 * exp(-(xct * xct + zct *zct)/0.0265);
 							pos_veloc(x,0,z,u,0,w);
-							pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+							pressure(2.0*h_r,2.0*h_r,2.0*h_r,p);
 
 						}
 					}//columns
@@ -1209,14 +1224,14 @@ void STORAGE::pressure(double dx,double dy,double dz)
 	fld.rho.push_back(rho0);
 	fld.p.push_back(p0);
 	if (lattice == 1 || lattice == 2)
-	    fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+		fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
 	else if (lattice == 3)
-    {
-        if (dim == 3)
-            fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
-        else if (dim == 2)
-            fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
-    }
+	{
+		if (dim == 3)
+			fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
+		else if (dim == 2)
+			fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
+	}
 }
 
 void STORAGE::pressure(double dx,double dy,double dz,double value)
@@ -1224,14 +1239,14 @@ void STORAGE::pressure(double dx,double dy,double dz,double value)
 	fld.rho.push_back(rho0);
 	fld.p.push_back(value);
 	if (lattice == 1 || lattice == 2)
-	    fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
+		fld.pm.push_back(vnorm_mass*fld.rho.back()*dx*dy*dz);
 	else if (lattice == 3)
-    {
-        if (dim == 3)
-            fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
-        else if (dim == 2)
-            fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
-    }
+	{
+		if (dim == 3)
+			fld.pm.push_back(vnorm_mass*fld.rho.back()*4.0*sqrt(2)*pow(dx/2,3));
+		else if (dim == 2)
+			fld.pm.push_back(vnorm_mass*fld.rho.back()*2.0*sqrt(3)*pow(dx/2,2));
+	}
 }
 
 void STORAGE::pressure_b(double dx,double dy,double dz)
@@ -1605,7 +1620,7 @@ void STORAGE::divide(int start, int end, int kind)
 	//	nx = ncn*ncm*ncl;
 	if (i_extendz == 1 && (PartitionIndex[2] + 1) == PL)
 	{
-	    ncl++;
+		ncl++;
 		local_ncl++;
 		local_ncl_interior[1]++;
 		nx = local_ncn * local_ncm * local_ncl;
@@ -1754,7 +1769,7 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"DATASET POLYDATA\n");
 	fprintf(outfile,"POINTS %lu double\n",np-0);
 	for (i =0;i<np;i++)
-//	for (i =0;i<0;i++)
+		//	for (i =0;i<0;i++)
 	{
 		if (dim == 3)
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],yp[i],zp[i]);
@@ -1765,7 +1780,7 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"SCALARS pressure double\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
 	for (i = 0;i<np;i++)
-	//for (i =0;i<0;i++)
+		//for (i =0;i<0;i++)
 	{
 		fprintf(outfile,"%.16g\n",p[i]);
 	}
@@ -2155,6 +2170,13 @@ void STORAGE::allocation()
 		ycor[i]=0;
 		zcor[i]=0;
 	}
+	double dtemp = dx;
+	if (lattice == 3)
+	{
+		dx = 1.3 * dx;
+		dy = 1.3 * dy;
+		dz = 1.3 * dz;
+	}
 	int n0,n1,m0,m1,l0,l1;
 	if ((localvlx[0] - vlx[0]< 0) || (localvlx[0] == vlx[0]))
 		n0 = 0;
@@ -2165,12 +2187,12 @@ void STORAGE::allocation()
 	n1 = (int)((min(vlx[1],localvlx[1])+(1e-10)*dx-vlx[0])/dx);
 	if (local_ncn_interior[1] != local_ncn)
 		n1++;
-	if (localvly[0] - vly[0]< 0)
+	if ((localvly[0] - vly[0]< 0) || (localvly[0] == vly[0]))
 		m0 = 0;
 	else
 		m0 = (int)((localvly[0]-vly[0])/dy) + 1;
 	m1 = (int)((min(vly[1],localvly[1])+(1e-10)*dy-vly[0])/dy);
-	if (localvlz[0] - vlz[0]< 0)
+	if ((localvlz[0] - vlz[0]< 0)  || (localvly[0] == vly[0]))
 		l0 = 0;
 	else
 		l0 = (int)((localvlz[0]-vlz[0])/dz) + 1;
@@ -2179,6 +2201,12 @@ void STORAGE::allocation()
 		scalar = new double[(n1-n0+1) * (m1-m0+1) * (l1-l0+1)];
 	else
 		scalar = new double[(n1-n0+1) * (l1-l0+1)];
+	if (lattice == 3)
+	{
+		dx = dtemp;
+		dy = dtemp;
+		dz = dtemp;
+	}
 }
 
 void STORAGE::GetB(double x,double y,double z,double t,double B[])
@@ -2210,8 +2238,8 @@ void STORAGE::CrossProduct(double a[],double b[],double c[])
 
 void STORAGE::ParallelInitialization()
 {
-	if (dim != 3)
-		assert(0);
+	//	if (dim != 3)
+	//		assert(0);
 	if (dim == 3)
 	{
 		PartitionIndex[2] = id / (PN * PM);
@@ -2395,8 +2423,8 @@ void STORAGE::ParallelInitialization()
 
 void STORAGE::ParallelAdjustment()
 {
-	if (dim != 3)
-		assert(0);
+	//	if (dim != 3)
+	//		assert(0);
 	local_ncn_interior[0] = 0;
 	local_ncn_interior[1] = local_ncn;
 	local_ncm_interior[0] = 0;
@@ -12521,9 +12549,9 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	double dtemp = dx;
 	if (lattice == 3)
 	{
-		dx = 1.1 * dx;
-		dy = 1.1 * dy;
-		dz = 1.1 * dz;
+		dx = 1.3 * dx;
+		dy = 1.3 * dy;
+		dz = 1.3 * dz;
 	}
 	int n0,n1,m0,m1,l0,l1;
 	if ((localvlx[0] - vlx[0]< 0) || (localvlx[0] == vlx[0]))
@@ -12535,12 +12563,12 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	n1 = (int)((min(vlx[1],localvlx[1])+(1e-8)*dx-vlx[0])/dx);
 	if (local_ncn_interior[1] != local_ncn)
 		n1++;
-	if (localvly[0] - vly[0]< 0)
+	if ((localvly[0] - vly[0]< 0) || (localvly[0] == vly[0]))
 		m0 = 0;
 	else
 		m0 = (int)((localvly[0]-vly[0])/dy) + 1;
 	m1 = (int)((min(vly[1],localvly[1])+(1e-8)*dy-vly[0])/dy);
-	if (localvlz[0] - vlz[0]< 0)
+	if ((localvlz[0] - vlz[0]< 0) || (localvlz[0] == vlz[0]))
 		l0 = 0;
 	else
 		l0 = (int)((localvlz[0]-vlz[0])/dz) + 1;
@@ -13268,16 +13296,16 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	else
 	{
 		for (int i = 0; i<(n1-n0+1); i++)
-				for (int k = 0;k<(l1-l0+1);k++)
-				{
-					int index = i + k * (n1-n0+1);
-					if (statesname[0] == 'D' || statesname[0] == 'p')
-						scalar[index] = 0;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
-						scalar[index] = 0;
-					else
-						scalar[index] = -1;
-				}
+			for (int k = 0;k<(l1-l0+1);k++)
+			{
+				int index = i + k * (n1-n0+1);
+				if (statesname[0] == 'D' || statesname[0] == 'p')
+					scalar[index] = 0;
+				else if (statesname[0] == 'p' || statesname[0] == 'p')
+					scalar[index] = 0;
+				else
+					scalar[index] = -1;
+			}
 		//finish mesh building
 
 		//locate position
@@ -13331,7 +13359,7 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				volumn[1] = distancex[1] * distancez[0];
 				volumn[2] = distancex[0] * distancez[1];
 				volumn[3] = distancex[1] * distancez[1];
-				double volumn_inverse[8];
+				double volumn_inverse[4];
 				for (int count1 = 0; count1<4; count1++)
 				{
 					volumn_inverse[count1] = 1;
@@ -13400,12 +13428,25 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 		fprintf(outfile,"SCALARS Interface double 1\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
 
-	for (int k = 0;k<(l1-l0+1);k++)
+	if (dim == 2)
+	{
+		for (int k = 0;k<(l1-l0+1);k++)
 			for (int i = 0; i<(n1-n0+1); i++)
 			{
 				int index = i + k * (n1 - n0 + 1);
 				fprintf(outfile,"%.16g\n",scalar[index]);
 			}
+	}
+	else
+	{
+		for (int k = 0;k<(l1-l0+1);k++)
+			for (int j = 0; j<(m1-m0+1); j++)
+				for (int i = 0; i<(n1-n0+1); i++)
+				{
+					int index = Index3D(i,j,k,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+					fprintf(outfile,"%.16g\n",scalar[index]);
+				}
+	}
 	fclose(outfile);
 	if (lattice == 3)
 	{
