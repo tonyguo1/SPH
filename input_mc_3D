@@ -1,0 +1,38 @@
+0                       Choose Starting options:  0=new, 1=restart, 2=new with CheckPointg, 3=restart with CheckPointing
+3                       Kernel: 1=gaussian, 2=quadratic; 3=cubic; 5=Wendland
+1                       Time-stepping algorithm: 1=predictor-corrector, 2=verlet, 3=symplectic, 4=Beeman
+2                       Density Filter: 0=none, 1=Shepard filter, 2=MLS
+30                       ndt_FilterPerform (if density filter is used) ?
+0                       Kernel correction 0=None, 1=Kernel correction, 2=Gradient kernel Correction
+1                       Viscosity treatment 1=artificial; 2=laminar; 3=laminar + SPS
+0.3                     Viscosity value( if visc.treatment=1 it's alpha, if not kinem. visc approx 1.e-6)
+0                       Vorticity printing ? (1=yes)
+0                       gravity
+3                       dimension
+4                       Equation of State: 1=Tait's equation, 2=Ideal Gas, 3= Morris
+2                       h_SWL
+13.6                    rho0
+129200                  p0
+50000                   pinf
+0                       einf
+5.7                     gamma
+3                       Boundary Conditions: 1=Repulsive Force; 2=Dalrymple; 3=Open
+15                      ndt_DBCPerform ? (1 means no correction)
+3                       Initial Fluid Particle Structure: 1= SC, 2= BCC 3=Hex
+0 0 0                   Box dimension x0,y0,z0
+2.0 2.0 8.0             Box dimension x1,y1,z1?
+0.05 0.05 0.5           Spacing dx,dy,dz?
+0.866025404             h=coefficient*sqrt(dx*dx+dy*dy+dz*dz):  coefficient ???
+0 0 0                   Periodic Lateral boundaries in X, Y, & Z-Directions ? (1=yes)
+0                       Fill box area?
+1                       Fill cylinder?
+1.0 1.0 4.0                 cylindar center 
+0.5                     cylindar radius
+6			cylindar length without cap
+0 0 0                    initial velocity
+1 0.01                  Input the max time and print interval
+0.                      initial time of outputting general data
+0.0005 1.0 -1.0         For detailed recording during RUN: out_detail, start, end
+0.000000005 1               input dt ??, variable dt ??
+0.02                     CFL number (0.1-0.5)
+0                       Use of Riemann Solver: 0=None, 1=Conservative (Vila), 2=NonConservative (Parshikov)
