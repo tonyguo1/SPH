@@ -12592,9 +12592,9 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				for (int k = 0;k<(l1-l0+1);k++)
 				{
 					int index = Index3D(i,j,k,(n1-n0+1),(m1-m0+1),(l1-l0+1));
-					if (statesname[0] == 'D' || statesname[0] == 'p')
+					if (statesname[0] == 'D' || statesname[0] == 'd')
 						scalar[index] = 0;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						scalar[index] = 0;
 					else
 						scalar[index] = -1;
@@ -12675,7 +12675,15 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				volumn[6] = distancex[1] * distancey[1] * distancez[1];
 				volumn[7] = distancex[0] * distancey[1] * distancez[1];
 				double volumn_inverse[8];
-				for (int count1 = 0; count1<8; count1++)
+				volumn_inverse[0] = volumn[6];
+				volumn_inverse[1] = volumn[7];
+				volumn_inverse[2] = volumn[4];
+				volumn_inverse[3] = volumn[5];
+				volumn_inverse[4] = volumn[2];
+				volumn_inverse[5] = volumn[3];
+				volumn_inverse[6] = volumn[0];
+				volumn_inverse[7] = volumn[1];
+				/*for (int count1 = 0; count1<8; count1++)
 				{
 					volumn_inverse[count1] = 1;
 					for (int count2 = 0; count2<8; count2++)
@@ -12688,11 +12696,13 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
+				*/
+				double total = 1;
 				for (int count1 = 0; count1<8; count1++)
 				{
-					if (statesname[0] == 'D' || statesname[0] == 'p')
+					if (statesname[0] == 'D' || statesname[0] == 'd')
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
 					else
 						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
@@ -12854,6 +12864,15 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				volumn[6] = distancex[1] * distancey[1] * distancez[1];
 				volumn[7] = distancex[0] * distancey[1] * distancez[1];
 				double volumn_inverse[8];
+				volumn_inverse[0] = volumn[6];
+				volumn_inverse[1] = volumn[7];
+				volumn_inverse[2] = volumn[4];
+				volumn_inverse[3] = volumn[5];
+				volumn_inverse[4] = volumn[2];
+				volumn_inverse[5] = volumn[3];
+				volumn_inverse[6] = volumn[0];
+				volumn_inverse[7] = volumn[1];
+				/*
 				for (int count1 = 0; count1<8; count1++)
 				{
 					volumn_inverse[count1] = 1;
@@ -12867,11 +12886,13 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
+				*/
+				double total=1;
 				for (int count1 = 0; count1<8; count1++)
 				{
-					if (statesname[0] == 'D' || statesname[0] == 'p')
+					if (statesname[0] == 'D' || statesname[0] == 'd')
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
 					else
 						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
@@ -12920,6 +12941,15 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				volumn[6] = distancex[1] * distancey[1] * distancez[1];
 				volumn[7] = distancex[0] * distancey[1] * distancez[1];
 				double volumn_inverse[8];
+				volumn_inverse[0] = volumn[6];
+				volumn_inverse[1] = volumn[7];
+				volumn_inverse[2] = volumn[4];
+				volumn_inverse[3] = volumn[5];
+				volumn_inverse[4] = volumn[2];
+				volumn_inverse[5] = volumn[3];
+				volumn_inverse[6] = volumn[0];
+				volumn_inverse[7] = volumn[1];
+				/*
 				for (int count1 = 0; count1<8; count1++)
 				{
 					volumn_inverse[count1] = 1;
@@ -12933,11 +12963,13 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
+				*/
+				double total=1;
 				for (int count1 = 0; count1<8; count1++)
 				{
-					if (statesname[0] == 'D' || statesname[0] == 'p')
+					if (statesname[0] == 'D' || statesname[0] == 'd')
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
 					else
 						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
@@ -13299,9 +13331,9 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 			for (int k = 0;k<(l1-l0+1);k++)
 			{
 				int index = i + k * (n1-n0+1);
-				if (statesname[0] == 'D' || statesname[0] == 'p')
+				if (statesname[0] == 'D' || statesname[0] == 'd')
 					scalar[index] = 0;
-				else if (statesname[0] == 'p' || statesname[0] == 'p')
+				else if (statesname[0] == 'P' || statesname[0] == 'p')
 					scalar[index] = 0;
 				else
 					scalar[index] = -1;
@@ -13375,9 +13407,9 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 					total = total + volumn_inverse[count1];
 				for (int count1 = 0; count1<4; count1++)
 				{
-					if (statesname[0] == 'D' || statesname[0] == 'p')
+					if (statesname[0] == 'D' || statesname[0] == 'd')
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
-					else if (statesname[0] == 'p' || statesname[0] == 'p')
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
 					else
 						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
