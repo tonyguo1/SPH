@@ -717,7 +717,7 @@ void STORAGE::Fill_Part(int N,int M,int L,double dx,double dy,double dz, double 
 
 void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double zcen,double radius,double length,double u,double v,double w)
 {
-	double angle = atan(1);
+	double angle = 0;//atan(1);
 	double L = length/2;
 	//	u = 0;//25 * sin(angle);
 	//	v = 0;
@@ -986,8 +986,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
+									double p = p0 * exp(-(xct * xct + ycf *ycf)/0.0265) * exp(-zct * zct / 20);
 									pos_veloc(x,y,z,u,v,w);
-									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r,p);
 								}
 							}
 						}
@@ -1021,8 +1022,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
+									double p = p0 * exp(-(xct * xct + ycf *ycf)/0.0265) * exp(-zct * zct / 20);
 									pos_veloc(x,y,z,u,v,w);
-									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r,p );
 								}
 							}
 						}
@@ -1062,8 +1064,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
+									double p = p0 * exp(-(xct * xct + ycf *ycf)/0.0265) * exp(-zct * zct / 20);
 									pos_veloc(x,y,z,u,v,w);
-									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r,p);
 								}
 							}
 						}
@@ -1097,8 +1100,9 @@ void STORAGE::Drop(double dx,double dy,double dz,double xcen,double ycen,double 
 								if (dist < 0)
 								{
 									nn++;
+									double p = p0 * exp(-(xct * xct + ycf *ycf)/0.0265) * exp(-zct * zct / 20);
 									pos_veloc(x,y,z,u,v,w);
-									pressure(2.0*h_r,2.0*h_r,2.0*h_r);
+									pressure(2.0*h_r,2.0*h_r,2.0*h_r,p);
 								}
 							}
 						}
@@ -2171,12 +2175,6 @@ void STORAGE::allocation()
 		zcor[i]=0;
 	}
 	double dtemp = dx;
-	if (lattice == 3)
-	{
-		dx = 1.3 * dx;
-		dy = 1.3 * dy;
-		dz = 1.3 * dz;
-	}
 	int n0,n1,m0,m1,l0,l1;
 	if ((localvlx[0] - vlx[0]< 0) || (localvlx[0] == vlx[0]))
 		n0 = 0;
@@ -2201,12 +2199,6 @@ void STORAGE::allocation()
 		scalar = new double[(n1-n0+1) * (m1-m0+1) * (l1-l0+1)];
 	else
 		scalar = new double[(n1-n0+1) * (l1-l0+1)];
-	if (lattice == 3)
-	{
-		dx = dtemp;
-		dy = dtemp;
-		dz = dtemp;
-	}
 }
 
 void STORAGE::GetB(double x,double y,double z,double t,double B[])
@@ -12547,12 +12539,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 {
 	//buildmesh
 	double dtemp = dx;
-	if (lattice == 3)
-	{
-		dx = 1.3 * dx;
-		dy = 1.3 * dy;
-		dz = 1.3 * dz;
-	}
 	int n0,n1,m0,m1,l0,l1;
 	if ((localvlx[0] - vlx[0]< 0) || (localvlx[0] == vlx[0]))
 		n0 = 0;
@@ -12573,6 +12559,8 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 	else
 		l0 = (int)((localvlz[0]-vlz[0])/dz) + 1;
 	l1 = (int)((min(vlz[1],localvlz[1])+(1e-8)*dz-vlz[0])/dz);
+	if (local_ncl_interior[1] != local_ncl)
+		l1++;
 	int dimension[3] = {n1-n0 +1, m1-m0+1,l1-l0+1};
 	//	scalar = new double**[n1-n0+1];
 	//	for (int i = 0; i<(n1-n0+1); i++)
@@ -12704,8 +12692,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-					else
-						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
 				}
 
 				//deposit value
@@ -12971,8 +12957,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-					else
-						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
 				}
 
 				int index;
@@ -13323,6 +13307,155 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 			//			index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
 			//			scalar[index] += volumn_inverse[4];
 			//		}
+			else if (icell>=0 && icell <= (n1-n0-1) &&
+					 jcell>=0 && jcell <= (m1-m0-1) &&
+					 kcell== l1-l0)
+			{
+				double x0,x1,y0,y1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				y0 = origin[1] + jcell * dy;
+				y1 = y0 + dy;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancey[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancey[0] = (yp[i] - y0)/dy;
+				distancey[1] = (y1 - yp[i])/dy;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[8]={0};
+				//index
+				//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+				//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+				volumn[0] = distancex[0] * distancey[0] * distancez[0];
+				volumn[1] = distancex[1] * distancey[0] * distancez[0];
+				volumn[2] = distancex[1] * distancey[1] * distancez[0];
+				volumn[3] = distancex[0] * distancey[1] * distancez[0];
+				volumn[4] = distancex[0] * distancey[0] * distancez[1];
+				volumn[5] = distancex[1] * distancey[0] * distancez[1];
+				volumn[6] = distancex[1] * distancey[1] * distancez[1];
+				volumn[7] = distancex[0] * distancey[1] * distancez[1];
+				double volumn_inverse[8];
+				volumn_inverse[0] = volumn[6];
+				volumn_inverse[1] = volumn[7];
+				volumn_inverse[2] = volumn[4];
+				volumn_inverse[3] = volumn[5];
+				volumn_inverse[4] = volumn[2];
+				volumn_inverse[5] = volumn[3];
+				volumn_inverse[6] = volumn[0];
+				volumn_inverse[7] = volumn[1];
+				/*
+							for (int count1 = 0; count1<8; count1++)
+							{
+								volumn_inverse[count1] = 1;
+								for (int count2 = 0; count2<8; count2++)
+								{
+									if (count1 == count2) continue;
+									else
+										volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+								}
+							}
+							double total=0;
+							for (int count1 = 0; count1<8; count1++)
+								total = total + volumn_inverse[count1];
+				 */
+				double total=1;
+				for (int count1 = 0; count1<8; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'd')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+				}
+
+				//deposit value
+				int index;
+				index = Index3D(icell,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[0];
+				index = Index3D(icell,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[3];
+				index = Index3D(icell+1,jcell,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[1];
+				index = Index3D(icell+1,jcell+1,kcell,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[2];
+			}
+			else if (icell>=0 && icell <= (n1-n0-1) &&
+					jcell>=0 && jcell <= (m1-m0-1) &&
+					kcell==-1)
+			{
+				double x0,x1,y0,y1,z0,z1;
+				x0 = origin[0] + icell * dx;
+				x1 = x0 + dx;
+				y0 = origin[1] + jcell * dy;
+				y1 = y0 + dy;
+				z0 = origin[2] + kcell * dz;
+				z1 = z0 + dz;
+				double distancex[2],distancey[2],distancez[2]; //to faces
+				distancex[0] = (xp[i] - x0)/dx;
+				distancex[1] = (x1 - xp[i])/dx;
+				distancey[0] = (yp[i] - y0)/dy;
+				distancey[1] = (y1 - yp[i])/dy;
+				distancez[0] = (zp[i] - z0)/dz;
+				distancez[1] = (z1 - zp[i])/dz;
+				//get volumn fraction
+				double volumn[8]={0};
+				//index
+				//0:west-south-down; 1:east-south-down; 2:east-north-down; 3:west-north-down
+				//4:west-south-up;   5:east-south-up;   6:east-north-up;   7:east-north-up
+				volumn[0] = distancex[0] * distancey[0] * distancez[0];
+				volumn[1] = distancex[1] * distancey[0] * distancez[0];
+				volumn[2] = distancex[1] * distancey[1] * distancez[0];
+				volumn[3] = distancex[0] * distancey[1] * distancez[0];
+				volumn[4] = distancex[0] * distancey[0] * distancez[1];
+				volumn[5] = distancex[1] * distancey[0] * distancez[1];
+				volumn[6] = distancex[1] * distancey[1] * distancez[1];
+				volumn[7] = distancex[0] * distancey[1] * distancez[1];
+				double volumn_inverse[8];
+				volumn_inverse[0] = volumn[6];
+				volumn_inverse[1] = volumn[7];
+				volumn_inverse[2] = volumn[4];
+				volumn_inverse[3] = volumn[5];
+				volumn_inverse[4] = volumn[2];
+				volumn_inverse[5] = volumn[3];
+				volumn_inverse[6] = volumn[0];
+				volumn_inverse[7] = volumn[1];
+				/*
+							for (int count1 = 0; count1<8; count1++)
+							{
+								volumn_inverse[count1] = 1;
+								for (int count2 = 0; count2<8; count2++)
+								{
+									if (count1 == count2) continue;
+									else
+										volumn_inverse[count1] = volumn_inverse[count1] * volumn[count2];
+								}
+							}
+							double total=0;
+							for (int count1 = 0; count1<8; count1++)
+								total = total + volumn_inverse[count1];
+				 */
+				double total=1;
+				for (int count1 = 0; count1<8; count1++)
+				{
+					if (statesname[0] == 'D' || statesname[0] == 'd')
+						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'P' || statesname[0] == 'p')
+						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+				}
+
+				int index;
+				index = Index3D(icell,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[4];
+				index = Index3D(icell,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[7];
+				index = Index3D(icell+1,jcell,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[5];
+				index = Index3D(icell+1,jcell+1,kcell+1,(n1-n0+1),(m1-m0+1),(l1-l0+1));
+				scalar[index] += volumn_inverse[6];
+			}
 		}
 	}
 	else
@@ -13411,8 +13544,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
-					else
-						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
 				}
 
 				//deposit value
@@ -13445,10 +13576,10 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 		fprintf(outfile,"The actual time is %.8f\n",time);
 		fprintf(outfile,"ASCII\n");
 		fprintf(outfile,"DATASET STRUCTURED_POINTS\n");
-		fprintf(outfile,"DIMENSIONS %d %d %d\n",dimension[0],1,dimension[2]);
-		fprintf(outfile,"SPACING %lf %lf %lf\n",dx,0,dz);
-		fprintf(outfile,"ORIGIN %lf %lf %lf\n", origin[0]+0.5*dx,0,origin[2]+0.5*dz);
-		fprintf(outfile,"POINT_DATA %d\n",(dimension[0])*(dimension[2]));
+		fprintf(outfile,"DIMENSIONS %d %d %d\n",dimension[0],dimension[1],dimension[2]);
+		fprintf(outfile,"SPACING %lf %lf %lf\n",dx,dy,dz);
+		fprintf(outfile,"ORIGIN %lf %lf %lf\n", origin[0],origin[1],origin[2]);
+		fprintf(outfile,"POINT_DATA %d\n",(dimension[0])*dimension[1]*(dimension[2]));
 	}
 	else
 		outfile = fopen(filename,"a");
@@ -13456,8 +13587,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 		fprintf(outfile,"SCALARS Density double 1\n");
 	else if (statesname[0] == 'P' || statesname[0] == 'p')
 		fprintf(outfile,"SCALARS Pressure double 1\n");
-	else
-		fprintf(outfile,"SCALARS Interface double 1\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
 
 	if (dim == 2)
@@ -13480,12 +13609,6 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				}
 	}
 	fclose(outfile);
-	if (lattice == 3)
-	{
-		dx = dtemp;
-		dy = dtemp;
-		dz = dtemp;
-	}
 }
 
 int STORAGE::exists(const char *fname)
