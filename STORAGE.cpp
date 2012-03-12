@@ -1314,6 +1314,10 @@ void STORAGE::Initialization(string input)
 	line_num++;
 	line.clear();
 	line.str(lines_of_text[line_num]);
+	line>>i_print_grid_velocity;
+	line_num++;
+	line.clear();
+	line.str(lines_of_text[line_num]);
 	line>>g;
 	line_num++;
 	line.clear();
@@ -12584,6 +12588,8 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						scalar[index] = 0;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						scalar[index] = 0;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+						scalar[index] = 0;
 					else
 						scalar[index] = -1;
 				}
@@ -12684,7 +12690,7 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
-				*/
+				 */
 				double total = 1;
 				for (int count1 = 0; count1<8; count1++)
 				{
@@ -12692,6 +12698,11 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+					{
+						double v = sqrt(up[i] * up[i] + vp[i] * vp[i] + wp[i] * wp[i]);
+						volumn_inverse[count1] = v * volumn_inverse[count1] / total;
+					}
 				}
 
 				//deposit value
@@ -12872,7 +12883,7 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
-				*/
+				 */
 				double total=1;
 				for (int count1 = 0; count1<8; count1++)
 				{
@@ -12880,6 +12891,11 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+					{
+						double v = sqrt(up[i] * up[i] + vp[i] * vp[i] + wp[i] * wp[i]);
+						volumn_inverse[count1] = v * volumn_inverse[count1] / total;
+					}
 					else
 						volumn_inverse[count1] = 2 * volumn_inverse[count1] / total;
 				}
@@ -12949,7 +12965,7 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 				double total=0;
 				for (int count1 = 0; count1<8; count1++)
 					total = total + volumn_inverse[count1];
-				*/
+				 */
 				double total=1;
 				for (int count1 = 0; count1<8; count1++)
 				{
@@ -12957,6 +12973,11 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+					{
+						double v = sqrt(up[i] * up[i] + vp[i] * vp[i] + wp[i] * wp[i]);
+						volumn_inverse[count1] = v * volumn_inverse[count1] / total;
+					}
 				}
 
 				int index;
@@ -13308,8 +13329,8 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 			//			scalar[index] += volumn_inverse[4];
 			//		}
 			else if (icell>=0 && icell <= (n1-n0-1) &&
-					 jcell>=0 && jcell <= (m1-m0-1) &&
-					 kcell== l1-l0)
+					jcell>=0 && jcell <= (m1-m0-1) &&
+					kcell== l1-l0)
 			{
 				double x0,x1,y0,y1,z0,z1;
 				x0 = origin[0] + icell * dx;
@@ -13369,6 +13390,11 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+					{
+						double v = sqrt(up[i] * up[i] + vp[i] * vp[i] + wp[i] * wp[i]);
+						volumn_inverse[count1] = v * volumn_inverse[count1] / total;
+					}
 				}
 
 				//deposit value
@@ -13444,6 +13470,11 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 						volumn_inverse[count1] = rho[i] * volumn_inverse[count1] / total;
 					else if (statesname[0] == 'P' || statesname[0] == 'p')
 						volumn_inverse[count1] = p[i] * volumn_inverse[count1] / total;
+					else if (statesname[0] == 'V' || statesname[0] == 'v')
+					{
+						double v = sqrt(up[i] * up[i] + vp[i] * vp[i] + wp[i] * wp[i]);
+						volumn_inverse[count1] = v * volumn_inverse[count1] / total;
+					}
 				}
 
 				int index;
@@ -13587,6 +13618,8 @@ void STORAGE::StatesPrint(int step, double time, char* statesname, const char* o
 		fprintf(outfile,"SCALARS Density double 1\n");
 	else if (statesname[0] == 'P' || statesname[0] == 'p')
 		fprintf(outfile,"SCALARS Pressure double 1\n");
+	else if (statesname[0] == 'V' || statesname[0] == 'v')
+		fprintf(outfile,"SCALARS Velocity_Magnitude double 1\n");
 	fprintf(outfile,"LOOKUP_TABLE default\n");
 
 	if (dim == 2)

@@ -109,6 +109,7 @@ public:
     double t_sta_det;
     double t_end_det;
     double interior_print_out_time_interval;
+    double i_print_grid_velocity;
     int i_restartRun;
     double CFL_number;
     double coefficient;

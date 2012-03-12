@@ -7,6 +7,7 @@
 1                       Viscosity treatment 1=artificial; 2=laminar; 3=laminar + SPS
 0.3                     Viscosity value( if visc.treatment=1 it's alpha, if not kinem. visc approx 1.e-6)
 0                       Vorticity printing ? (1=yes)
+1 			Velocity Magnitute Printing? (1=yes)
 0                       gravity
 3                       dimension
 4                       Equation of State: 1=Tait's equation, 2=Ideal Gas, 3= Morris

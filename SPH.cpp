@@ -128,11 +128,14 @@ int main(int argc, char **argv) {
 	store.detail = 0;
 	if (store.i_restartRun != 1)
 	{
+	        system("rm -r vtkoutput_states_*");
 		store.print_out(0,0,output.c_str());
 		store.StatesPrint(0,0,"Density",output.c_str());
 		store.StatesPrint(0,0,"Pressure",output.c_str());
+		store.StatesPrint(0,0,"Velocity_Magnitude",output.c_str());
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
+	assert(0);
 	while (solve->time < store.tmax && solve->itime < 10)
 	{
 		solve->ModifyDtForPrint();
