@@ -1314,7 +1314,15 @@ void STORAGE::Initialization(string input)
 	line_num++;
 	line.clear();
 	line.str(lines_of_text[line_num]);
-	line>>i_print_grid_velocity;
+	line>>i_velocity_print;
+	line_num++;
+	line.clear();
+	line.str(lines_of_text[line_num]);
+	line>>i_pressure_print;
+	line_num++;
+	line.clear();
+	line.str(lines_of_text[line_num]);
+	line>>i_density_print;
 	line_num++;
 	line.clear();
 	line.str(lines_of_text[line_num]);
@@ -1775,8 +1783,8 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 	fprintf(outfile,"The actual time is %.8f\n",time);
 	fprintf(outfile,"ASCII\n");
 	fprintf(outfile,"DATASET POLYDATA\n");
-	fprintf(outfile,"POINTS %lu double\n",np-0);
-	for (i =0;i<np;i++)
+	fprintf(outfile,"POINTS %lu double\n",np-nb);
+	for (i =nb;i<np;i++)
 		//	for (i =0;i<0;i++)
 	{
 		if (dim == 3)
@@ -1784,27 +1792,36 @@ void STORAGE::print_out(int step,double time,const char* outputname)
 		else
 			fprintf(outfile,"%.16g %.16g %.16g\n",xp[i],d,zp[i]);
 	}
-	fprintf(outfile,"POINT_DATA %lu\n",np-0);
-	fprintf(outfile,"SCALARS pressure double\n");
-	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i = 0;i<np;i++)
-		//for (i =0;i<0;i++)
+	fprintf(outfile,"POINT_DATA %lu\n",np-nb);
+	if (i_pressure_print)
 	{
-		fprintf(outfile,"%.16g\n",p[i]);
+		fprintf(outfile,"SCALARS pressure double\n");
+		fprintf(outfile,"LOOKUP_TABLE default\n");
+		for (i = nb;i<np;i++)
+			//for (i =0;i<0;i++)
+		{
+			fprintf(outfile,"%.16g\n",p[i]);
+		}
 	}
-	fprintf(outfile,"SCALARS density double\n");
-	fprintf(outfile,"LOOKUP_TABLE default\n");
-	for (i =0;i<np;i++)
+	if (i_density_print)
 	{
-		fprintf(outfile,"%.16g\n",rho[i]);
+		fprintf(outfile,"SCALARS density double\n");
+		fprintf(outfile,"LOOKUP_TABLE default\n");
+		for (i =nb;i<np;i++)
+		{
+			fprintf(outfile,"%.16g\n",rho[i]);
+		}
 	}
-	fprintf(outfile,"VECTORS velocity double\n");
-	for (i =0;i<np;i++)
+	if (i_velocity_print)
 	{
-		if (dim == 3)
-			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
-		else
-			fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
+		fprintf(outfile,"VECTORS velocity double\n");
+		for (i =nb;i<np;i++)
+		{
+			if (dim == 3)
+				fprintf(outfile,"%.16g %.16g %.16g\n",up[i],vp[i],wp[i]);
+			else
+				fprintf(outfile,"%.16g %.16g %.16g\n",up[i],d,wp[i]);
+		}
 	}
 	if (detail)
 	{

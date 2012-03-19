@@ -126,17 +126,19 @@ int main(int argc, char **argv) {
 	store.SendRecvBuffer();
 	solve->parallelinitialization();
 	store.detail = 0;
-	if (store.i_restartRun != 1)
+	/*if (store.i_restartRun != 1)
 	{
-	        system("rm -r vtkoutput_states_*");
+        	    system("rm -r vtkoutput_states_*");
 		store.print_out(0,0,output.c_str());
-		store.StatesPrint(0,0,"Density",output.c_str());
-		store.StatesPrint(0,0,"Pressure",output.c_str());
-		store.StatesPrint(0,0,"Velocity_Magnitude",output.c_str());
-	}
+		if (store.i_density_print)
+			store.StatesPrint(0,0,"Density",output.c_str());
+		if (store.i_pressure_print)
+			store.StatesPrint(0,0,"Pressure",output.c_str());
+		if (store.i_velocity_print)
+			store.StatesPrint(0,0,"Velocity_Magnitude",output.c_str());
+			}*/
 	MPI_Barrier(MPI_COMM_WORLD);
-	assert(0);
-	while (solve->time < store.tmax && solve->itime < 10)
+	while (solve->time < store.tmax && solve->itime < 5)
 	{
 		solve->ModifyDtForPrint();
 		solve->time+=solve->dt;

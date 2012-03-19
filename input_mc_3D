@@ -7,7 +7,9 @@
 1                       Viscosity treatment 1=artificial; 2=laminar; 3=laminar + SPS
 0.3                     Viscosity value( if visc.treatment=1 it's alpha, if not kinem. visc approx 1.e-6)
 0                       Vorticity printing ? (1=yes)
-1 			Velocity Magnitute Printing? (1=yes)
+1 			Velocity Printing? (1=yes)
+1                       pressure Printing? (1=yes)
+1                       density Printing? (1=yes)
 0                       gravity
 3                       dimension
 4                       Equation of State: 1=Tait's equation, 2=Ideal Gas, 3= Morris
@@ -19,10 +21,10 @@
 5.7                     gamma
 3                       Boundary Conditions: 1=Repulsive Force; 2=Dalrymple; 3=Open
 15                      ndt_DBCPerform ? (1 means no correction)
-3                       Initial Fluid Particle Structure: 1= SC, 2= BCC 3=Hex
+1                       Initial Fluid Particle Structure: 1= SC, 2= BCC 3=Hex
 0 0 0                   Box dimension x0,y0,z0
 2.0 2.0 8.0             Box dimension x1,y1,z1?
-0.05 0.05 0.5           Spacing dx,dy,dz?
+0.05 0.05 0.05           Spacing dx,dy,dz?
 0.866025404             h=coefficient*sqrt(dx*dx+dy*dy+dz*dz):  coefficient ???
 0 0 0                   Periodic Lateral boundaries in X, Y, & Z-Directions ? (1=yes)
 0                       Fill box area?
